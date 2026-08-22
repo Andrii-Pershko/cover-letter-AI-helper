@@ -21,4 +21,9 @@ if [ "$APP_ENV" = "dev" ] || [ "$APP_ENV" = "development" ]; then
 fi
 
 echo "Starting Next.js..."
+export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+export PORT="${PORT:-3401}"
+if [ -f server.js ]; then
+  exec node server.js
+fi
 exec npm start

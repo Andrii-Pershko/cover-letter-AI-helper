@@ -13,7 +13,7 @@
 У `.env` постав прапорець `APP_ENV`:
 
 - `dev` — live-сервер: зміни в коді підхоплюються самі, кеш `.next` лежить у корені проєкту.
-- `production` — зібраний Next (`npm start`), без mount коду.
+- `production` — зібраний Next (standalone, `node server.js`), без mount коду.
 
 ```bash
 cp .env.example .env

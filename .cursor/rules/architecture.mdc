@@ -22,7 +22,7 @@ alwaysApply: true
 
 - Прапорець у `.env`: `APP_ENV=dev` або `APP_ENV=production` (compose підхоплює `docker-compose.${APP_ENV}.yml`)
 - **dev:** `docker compose up` — `next dev --webpack` з polling, код і `.next` на хості (`.:/app`). Live reload без `--build`. `--build` лише для Dockerfile / npm-залежностей
-- **production:** `docker compose up --build` — зібраний образ, без mount коду, `npm start`
+- **production:** `docker compose up --build` — зібраний standalone-образ (`node server.js`), без mount коду і без повного `node_modules`
 - Для Next без контейнера app: `docker compose up db -d` і `npm run dev` з `DATABASE_URL=...@localhost:3402`
 - У контейнері `DATABASE_URL` завжди вказує на хост `db`, навіть якщо в `.env` стоїть localhost
 - Міграції: `prisma migrate deploy` у `docker/entrypoint.sh` перед стартом

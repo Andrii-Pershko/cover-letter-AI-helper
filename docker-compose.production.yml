@@ -11,6 +11,8 @@ services:
     environment:
       APP_ENV: production
       NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3401"
       DATABASE_URL: postgresql://aicl:aicl@db:5432/aicl?schema=public
     depends_on:
       db:
