@@ -1,0 +1,23 @@
+include:
+  - path: docker-compose.${APP_ENV:-production}.yml
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aicl
+      POSTGRES_PASSWORD: aicl
+      POSTGRES_DB: aicl
+    ports:
+      - "3402:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicl -d aicl"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:

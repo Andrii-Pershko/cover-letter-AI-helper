@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profile      Profile?
+}
+
+model Profile {
+  id               String   @id @default(cuid())
+  userId           String?  @unique
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  fullName        String   @default("")
+  headline        String   @default("")
+  yearsExperience Float?
+  englishLevel    String   @default("")
+  location        String   @default("")
+  workFormat      String   @default("")
+  targetLevel     String   @default("")
+  clLanguage      String   @default("uk")
+  linkedin        String   @default("")
+  email           String   @default("")
+  telegram        String   @default("")
+  cvFileName      String?
+  cvMimeType      String?
+  cvText          String?  @db.Text
+  coreStack       String   @default("") @db.Text
+  avoidInCl       String?  @db.Text
+  extraNotes      String?  @db.Text
+  clMatchThreshold Int     @default(80)
+  clCharLimit     Int      @default(1500)
+  projects        Project[]
+  exampleLetters  ExampleCoverLetter[]
+  analyses        Analysis[]
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  profileId    String
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title        String
+  product      String   @default("")
+  problem      String   @db.Text
+  contribution String   @db.Text
+  stack        String[] @default([])
+  result       String   @default("") @db.Text
+  tags         String[] @default([])
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+model ExampleCoverLetter {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title      String
+  company    String   @default("")
+  role       String   @default("")
+  whyItWorks String   @default("") @db.Text
+  body       String   @db.Text
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+model Analysis {
+  id               String                 @id @default(cuid())
+  profileId        String
+  profile          Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt        DateTime               @default(now())
+  companyName      String?
+  jobTitle         String?
+  jobLevel         String?
+  jobText          String                 @db.Text
+  matchMin         Int
+  matchMax         Int
+  recommendation   String
+  gaps             String[]
+  coverLetter      String?                @db.Text
+  usedProjectTitle String?
+  requirements     AnalysisRequirement[]
+
+  @@index([profileId])
+}
+
+model AnalysisRequirement {
+  id            String   @id @default(cuid())
+  analysisId    String
+  analysis      Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  requirement   String
+  candidate     String
+  match         String
+  explanation   String?  @db.Text
+  techExplainer String?  @db.Text
+  isMustHave    Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  @@index([analysisId])
+}

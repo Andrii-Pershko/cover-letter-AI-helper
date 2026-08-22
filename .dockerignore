@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+.cursor
+src/generated
+backup.sql
+backup*.sql
+*.dump

@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI-CL
 
-## Getting Started
+Чесний match CV з вакансією і cover letter українською. Вакансію вставляєш текстом — сторінки не парсимо.
 
-First, run the development server:
+## Що потрібно перед аналізом
+
+1. Профіль: ім'я, роки досвіду, стек, CV, контакти
+2. Мінімум 2 проєкти-кейси для CL
+3. Мінімум 2 **ідеальні cover letter**, написані тобою — еталон тону, не шаблон для копіювання
+
+## Запуск у Docker
+
+У `.env` постав прапорець `APP_ENV`:
+
+- `dev` — live-сервер: зміни в коді підхоплюються самі, кеш `.next` лежить у корені проєкту.
+- `production` — зібраний Next (`npm start`), без mount коду.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
+# встав GOOGLE_GENERATIVE_AI_API_KEY з https://aistudio.google.com/apikey
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Dev (за замовчуванням у `.env.example`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# APP_ENV=dev
+docker compose up
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Prod:
 
-## Learn More
+```bash
+# APP_ENV=production
+docker compose up --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Відкрий [http://localhost:3401](http://localhost:3401), зареєструйся і заповни профіль.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Перший зареєстрований користувач підхопить уже наявні дані профілю (якщо вони були до auth). Наступні — порожній профіль.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Локальна розробка без контейнера app
 
-## Deploy on Vercel
+```bash
+cp .env.example .env
+docker compose up db -d
+npx prisma migrate deploy
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`DATABASE_URL` у `.env` для цього режиму — `localhost:3402` (хостовий порт Postgres). У контейнері app compose підміняє його на хост `db:5432`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## BD comands
+```
+docker compose exec db pg_dump -U aicl aicl > backup.sql
+# на новому сервері
+docker compose up db -d
+docker compose exec -T db psql -U aicl aicl < backup.sql
+```

@@ -22,7 +22,12 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # debug
 npm-debug.log*
@@ -30,8 +35,20 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (keep .env.example)
+.env
+.env.*
+!.env.example
+
+# database dumps / local backups (keep prisma/migrations)
+backup.sql
+backup*.sql
+*.dump
+*.pgdump
+*.backup
+
+# local docker overrides
+docker-compose.override.yml
 
 # vercel
 .vercel
@@ -39,3 +56,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Prisma 7 generated client
+/src/generated

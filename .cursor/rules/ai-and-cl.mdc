@@ -1,0 +1,62 @@
+---
+description: How AI matching and cover letters must be generated
+alwaysApply: true
+---
+
+# AI-пайплайн
+
+Два окремі виклики моделі, не один промпт «зроби все».
+
+1. **Match** — `generateObject` + `analysisSchema`
+2. **Cover letter** — лише якщо `(matchMin + matchMax) / 2 >= profile.clMatchThreshold`; `generateObject` + `coverLetterSchema`, лист збирається в коді. У промпт передати `clCharLimit` як ліміт символів тіла листа.
+
+Модель: `process.env.GEMINI_MODEL` або `gemini-2.5-flash`. Ключ: `GOOGLE_GENERATIVE_AI_API_KEY`.
+
+## Джерела правди (у цьому порядку)
+
+1. Підтверджений `coreStack` і `yearsExperience` у профілі
+2. Текст CV
+3. Кейси проєктів
+4. Ідеальні CL — лише як стиль, не як факти досвіду
+
+Заборонено вигадувати технології, роки, продукти, цифри й обов’язки, яких немає в цих джерелах.
+
+## Match
+
+- Аліаси: Next.js = NextJS, RTK = Redux Toolkit, Postgres = PostgreSQL, Nest = NestJS
+- Рівень вакансії і роки досвіду враховувати як gap, не «ну майже Senior»
+- Nice-to-have не важать як must-have
+- Для green у JSON `explanation` і `techExplainer` мають бути `null` (UI все одно їх сховає)
+- Для yellow — коротке `explanation`
+- Для red — `explanation` + `techExplainer` (що це, навіщо, що хочуть у вакансії)
+
+Відсоток зараз ставить модель у діапазоні. Не «покращуй» його евристиками без задачі на гібридний скоринг. Майбутнє: словник скілів + детермінований % , LLM лише для пояснень.
+
+## Cover letter
+
+У промпт обов’язково передати всі `ExampleCoverLetter` (title, whyItWorks, body) і всі проєкти.
+
+Модель має:
+
+- скопіювати тон/довжину/малюнок абзаців з прикладів, не речення
+- вибрати ОДИН кейс під вакансію (`usedProjectTitle` має збігатися з реальною назвою з кейс-банку)
+- не повторювати кейс, який уже є в прикладах, якщо є інший релевантний
+- не додавати підпис, ім’я, «З повагою», markdown-посилання
+
+Збірка в коді:
+
+```
+{greeting}
+
+{whyJob}
+
+{aboutAndCase}
+
+{closing}
+
+LinkedIn: ...
+Email: ...
+Telegram: ...
+```
+
+Контакти не генерує модель — підставляємо з профілю. Прибрати `https://` з початку, без `<a>`.

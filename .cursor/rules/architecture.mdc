@@ -1,0 +1,54 @@
+---
+description: Stack, Docker, Postgres, and code structure for AI-CL
+alwaysApply: true
+---
+
+# Архітектура
+
+Профіль належить користувачу (`User` → `Profile`). Auth: реєстрація / вхід, JWT у httpOnly cookie. Без сесії сторінки додатка недоступні.
+
+## Стек
+
+- Next.js (App Router) + TypeScript + Tailwind v4 — завжди останні стабільні версії
+- Prisma ORM 7 + PostgreSQL 16
+  - URL лише в `prisma.config.ts`, не в `schema.prisma`
+  - клієнт: `provider = "prisma-client"`, output `src/generated/prisma`
+  - рантайм через `@prisma/adapter-pg` + `pg`
+- AI: Vercel AI SDK + `@ai-sdk/google` (Gemini Flash, безкоштовний AI Studio ключ)
+- Парсинг CV: `unpdf` (PDF), `mammoth` (DOCX)
+- Усе пакується в `docker compose` (сервіси `db` + `app`)
+
+## Docker
+
+- Прапорець у `.env`: `APP_ENV=dev` або `APP_ENV=production` (compose підхоплює `docker-compose.${APP_ENV}.yml`)
+- **dev:** `docker compose up` — `next dev --webpack` з polling, код і `.next` на хості (`.:/app`). Live reload без `--build`. `--build` лише для Dockerfile / npm-залежностей
+- **production:** `docker compose up --build` — зібраний образ, без mount коду, `npm start`
+- Для Next без контейнера app: `docker compose up db -d` і `npm run dev` з `DATABASE_URL=...@localhost:3402`
+- У контейнері `DATABASE_URL` завжди вказує на хост `db`, навіть якщо в `.env` стоїть localhost
+- Міграції: `prisma migrate deploy` у `docker/entrypoint.sh` перед стартом
+- Не пінити Prisma 6 і не повертати `url` у `schema.prisma`
+- TypeScript: остання **мовна** гілка (`6.x`), не native TypeScript 7 — `eslint-config-next` його ще не їсть
+- ESLint: остання `9.x`, поки `eslint-config-next` не підтримує ESLint 10
+- Не переходити на SQLite «для простоти»
+
+## Дані
+
+- `User` — email + passwordHash, JWT-сесія
+- `Profile` — вводні дані + CV text + поріг CL (`clMatchThreshold`) і ліміт символів (`clCharLimit`); один профіль на користувача
+- `Project` — кейс-банк для CL
+- `ExampleCoverLetter` — еталонні листи користувача
+- `Analysis` + `AnalysisRequirement` — історія розборів
+
+Читання профілю: `getProfile()` з upsert `id: "default"`.
+
+Сторінки, що ходять у БД: `export const dynamic = "force-dynamic"`, щоб `next build` у Docker не намагався ходити в Postgres.
+
+## Структура коду
+
+- `src/app/actions/*` — server actions
+- `src/lib/ai/*` — промпти, Zod-схеми, виклик моделі
+- `src/lib/db.ts` — singleton Prisma
+- `src/lib/setup.ts` — чи готовий профіль до аналізу
+- `src/components/ui/*` — примітиви; сторінки не роздувати інлайн-стилями
+
+Нові фічі клади в існуючі таблиці/сторінки, не плоди паралельні сутності без потреби.
