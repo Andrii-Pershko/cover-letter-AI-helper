@@ -41,6 +41,7 @@ COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 COPY docker/entrypoint.sh ./docker/entrypoint.sh
 EXPOSE 3401
 ENTRYPOINT ["/bin/sh", "./docker/entrypoint.sh"]

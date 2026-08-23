@@ -13,7 +13,12 @@ if [ "$APP_ENV" = "dev" ] || [ "$APP_ENV" = "development" ]; then
 fi
 
 echo "Running Prisma migrations..."
-npx prisma migrate deploy
+# Standalone image has no .bin on PATH; npx then fails with "prisma: not found".
+if [ -f node_modules/prisma/build/index.js ]; then
+  node node_modules/prisma/build/index.js migrate deploy
+else
+  npx prisma migrate deploy
+fi
 
 if [ "$APP_ENV" = "dev" ] || [ "$APP_ENV" = "development" ]; then
   echo "Starting Next.js (dev, live reload)..."
