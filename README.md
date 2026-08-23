@@ -13,7 +13,7 @@
 У `.env` постав прапорець `APP_ENV`:
 
 - `dev` — live-сервер: зміни в коді підхоплюються самі, кеш `.next` лежить у корені проєкту.
-- `production` — зібраний Next (standalone, `node server.js`), без mount коду.
+- `production` — готовий образ з GHCR (`docker compose pull`), без `--build` на сервері.
 
 ```bash
 cp .env.example .env
@@ -27,11 +27,18 @@ Dev (за замовчуванням у `.env.example`):
 docker compose up
 ```
 
-Prod:
+Prod на VPS (образ уже зібраний у GitHub Actions, на сервері **без** `--build`):
 
 ```bash
 # APP_ENV=production
-docker compose up --build
+docker compose pull
+docker compose up -d
+```
+
+Локально зібрати production-образ (якщо треба перевірити Dockerfile):
+
+```bash
+docker build --target production -t ghcr.io/andrii-pershko/cover-letter-ai-helper:latest .
 ```
 
 Відкрий [http://localhost:3401](http://localhost:3401), зареєструйся і заповни профіль.

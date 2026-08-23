@@ -16,9 +16,8 @@ services:
         condition: service_healthy
 
   app:
-    build:
-      context: .
-      target: production
+    image: ghcr.io/andrii-pershko/cover-letter-ai-helper:latest
+    pull_policy: always
     restart: unless-stopped
     ports:
       - "3401:3401"

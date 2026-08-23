@@ -22,10 +22,10 @@ alwaysApply: true
 
 - Прапорець у `.env`: `APP_ENV=dev` або `APP_ENV=production` (compose підхоплює `docker-compose.${APP_ENV}.yml`)
 - **dev:** `docker compose up` — `next dev --webpack` з polling, код і `.next` на хості (`.:/app`). Live reload без `--build`. `--build` лише для Dockerfile / npm-залежностей
-- **production:** `docker compose up --build` — зібраний standalone-образ (`node server.js`), без mount коду і без повного `node_modules`
+- **production:** GitHub Actions збирає standalone-образ у `ghcr.io/andrii-pershko/cover-letter-ai-helper`. VPS робить `docker compose pull && up -d`, без `--build`. Міграції — `postgres:16-alpine` + `docker/apply-migrations.sh`
 - Для Next без контейнера app: `docker compose up db -d` і `npm run dev` з `DATABASE_URL=...@localhost:3402`
 - У контейнері `DATABASE_URL` завжди вказує на хост `db`, навіть якщо в `.env` стоїть localhost
-- Міграції: `prisma migrate deploy` у `docker/entrypoint.sh` перед стартом
+- Міграції: у production — sidecar Postgres з `docker/apply-migrations.sh`; у dev — `prisma migrate deploy` у `docker/entrypoint.sh`
 - Не пінити Prisma 6 і не повертати `url` у `schema.prisma`
 - TypeScript: остання **мовна** гілка (`6.x`), не native TypeScript 7 — `eslint-config-next` його ще не їсть
 - ESLint: остання `9.x`, поки `eslint-config-next` не підтримує ESLint 10
