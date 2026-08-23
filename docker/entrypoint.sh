@@ -10,13 +10,7 @@ if [ "$APP_ENV" = "dev" ] || [ "$APP_ENV" = "development" ]; then
   fi
   echo "Generating Prisma client..."
   npx prisma generate
-fi
-
-echo "Running Prisma migrations..."
-# Standalone image has no .bin on PATH; npx then fails with "prisma: not found".
-if [ -f node_modules/prisma/build/index.js ]; then
-  node node_modules/prisma/build/index.js migrate deploy
-else
+  echo "Running Prisma migrations..."
   npx prisma migrate deploy
 fi
 

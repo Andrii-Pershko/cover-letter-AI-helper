@@ -1,4 +1,17 @@
 services:
+  migrate:
+    build:
+      context: .
+      target: migrate
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://aicl:aicl@db:5432/aicl?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   app:
     build:
       context: .
@@ -17,3 +30,5 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
