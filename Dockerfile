@@ -27,10 +27,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgresql://aicl:aicl@db:5432/aicl?schema=public
 RUN npx prisma generate && npm run build
 
-FROM deps AS migrate
-ENV NODE_ENV=production
-CMD ["npx", "prisma", "migrate", "deploy"]
-
 FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
