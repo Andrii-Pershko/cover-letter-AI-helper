@@ -26,7 +26,7 @@ export function Label({
   hint?: string;
 }) {
   return (
-    <label htmlFor={htmlFor} className="flex min-h-5 flex-wrap items-baseline gap-x-2">
+    <label htmlFor={htmlFor} className="flex min-h-5 cursor-pointer flex-wrap items-baseline gap-x-2">
       <span className="text-sm font-medium leading-5 text-ink">
         {children}
       </span>

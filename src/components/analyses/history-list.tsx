@@ -38,7 +38,7 @@ export function HistoryList({
           <li key={item.id}>
             <Link
               href={`/analyses/${item.id}`}
-              className="glass-row flex items-center justify-between gap-4 rounded-[18px] px-4 py-3.5 transition-all duration-200 hover:-translate-y-px hover:bg-white/50"
+              className="glass-row flex cursor-pointer items-center justify-between gap-4 rounded-[18px] px-4 py-3.5 transition-all duration-200 hover:-translate-y-px hover:bg-white/50"
             >
               <span>
                 <span className="block text-sm font-medium text-ink">

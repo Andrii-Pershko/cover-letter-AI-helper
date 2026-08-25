@@ -127,8 +127,22 @@ textarea {
 }
 
 a,
-button:not(:disabled) {
+button:not(:disabled),
+label[for],
+select:not(:disabled),
+summary,
+[role="button"]:not(:disabled),
+[role="option"],
+[role="menuitem"],
+[role="tab"] {
   cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
 }
 
 textarea {
