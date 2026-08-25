@@ -23,10 +23,15 @@ type ProfilePayload = Profile & {
 
 const ANALYSIS_TIMEOUT_MS = 55_000;
 
-async function timedGenerateObject<T>(
-  step: string,
-  run: () => ReturnType<typeof generateObject<T>>,
-) {
+async function timedGenerateObject<
+  T extends {
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      reasoningTokens?: number;
+    };
+  },
+>(step: string, run: () => Promise<T>): Promise<T> {
   const started = Date.now();
   const result = await run();
   console.info("[ai]", {
