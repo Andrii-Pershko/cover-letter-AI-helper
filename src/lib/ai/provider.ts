@@ -10,9 +10,10 @@ export function getGoogleProviderOptions() {
 
   return {
     google: {
+      structuredOutputs: false,
       thinkingConfig: gemini3
-        ? { thinkingLevel: "minimal" as const }
-        : { thinkingBudget: 0 },
+        ? { thinkingLevel: "minimal" as const, includeThoughts: false }
+        : { thinkingBudget: 0, includeThoughts: false },
     },
   };
 }

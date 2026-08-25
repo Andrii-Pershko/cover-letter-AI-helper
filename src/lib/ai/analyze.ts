@@ -21,7 +21,8 @@ type ProfilePayload = Profile & {
   exampleLetters: ExampleCoverLetter[];
 };
 
-const ANALYSIS_TIMEOUT_MS = 55_000;
+const MATCH_TIMEOUT_MS = 60_000;
+const COVER_LETTER_TIMEOUT_MS = 40_000;
 
 async function timedGenerateObject<
   T extends {
@@ -48,7 +49,6 @@ async function timedGenerateObject<
 export async function runAnalysis(profile: ProfilePayload, jobText: string) {
   const model = getModel();
   const providerOptions = getGoogleProviderOptions();
-  const abortSignal = AbortSignal.timeout(ANALYSIS_TIMEOUT_MS);
 
   console.info("[ai]", { step: "start", model: getModelId() });
 
@@ -60,7 +60,7 @@ export async function runAnalysis(profile: ProfilePayload, jobText: string) {
       prompt: buildMatchPrompt(profile, jobText),
       maxOutputTokens: 8192,
       maxRetries: 1,
-      abortSignal,
+      abortSignal: AbortSignal.timeout(MATCH_TIMEOUT_MS),
       providerOptions,
     }),
   );
@@ -87,7 +87,7 @@ export async function runAnalysis(profile: ProfilePayload, jobText: string) {
         }),
         maxOutputTokens: 4096,
         maxRetries: 1,
-        abortSignal,
+        abortSignal: AbortSignal.timeout(COVER_LETTER_TIMEOUT_MS),
         providerOptions,
       }),
     );

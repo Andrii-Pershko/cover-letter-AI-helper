@@ -57,7 +57,7 @@ export async function analyzeJob(
     ) {
       return {
         error:
-          "Gemini не відповів за 55 секунд (часто зависає thinking на structured JSON). Спробуй ще раз або поверни gemini-2.5-flash.",
+          "Модель не встигла відповісти. Спробуй ще раз — якщо повторюється, в логах app буде крок match або cover-letter.",
       };
     }
     const message =

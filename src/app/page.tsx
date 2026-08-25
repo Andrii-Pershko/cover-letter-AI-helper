@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { getProfile } from "@/lib/profile";
 import { getSetupStatus } from "@/lib/setup";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export default async function HomePage({
   searchParams,
