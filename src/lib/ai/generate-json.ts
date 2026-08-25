@@ -85,11 +85,13 @@ export async function generateJson<S extends z.ZodType>(
     prompt,
     maxOutputTokens,
     timeoutMs,
+    temperature = 0,
   }: {
     system: string;
     prompt: string;
     maxOutputTokens: number;
     timeoutMs: number;
+    temperature?: number;
   },
 ): Promise<z.infer<S>> {
   const started = Date.now();
@@ -100,7 +102,7 @@ export async function generateJson<S extends z.ZodType>(
 
 Відповідь — лише один JSON-об'єкт, без markdown і без тексту навколо.`,
       prompt,
-      temperature: 0,
+      temperature,
       reasoning: "minimal",
       maxOutputTokens,
       maxRetries: 0,

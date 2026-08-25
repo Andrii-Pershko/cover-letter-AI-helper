@@ -53,6 +53,7 @@ export async function runAnalysis(profile: ProfilePayload, jobText: string) {
       }),
       maxOutputTokens: 1024,
       timeoutMs: COVER_LETTER_TIMEOUT_MS,
+      temperature: 0.5,
     });
 
     const knownTitles = new Set(profile.projects.map((project) => project.title));
