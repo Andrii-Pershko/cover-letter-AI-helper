@@ -174,13 +174,13 @@ export function AppShell({
           />
           <div
             className={cn(
-              "absolute inset-x-0 top-0 px-4 pb-5 pt-[4.5rem] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "absolute inset-x-0 top-0 px-4 pb-5 pt-[5.5rem] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
               menuOpen
                 ? "translate-y-0 opacity-100"
                 : "-translate-y-3 opacity-0",
             )}
           >
-            <div className="glass-card p-3">
+            <div className="glass-card p-3 !bg-white/70">
               <nav className="flex flex-col gap-1">
                 {items.map((item) => {
                   const Icon = item.icon;
@@ -271,8 +271,8 @@ export function AppShell({
                         ? "text-white"
                         : "text-muted hover:bg-white/35 hover:text-ink",
                       active &&
-                        !pill &&
-                        "bg-accent shadow-[0_8px_22px_rgb(44_185_164_/_0.32)]",
+                      !pill &&
+                      "bg-accent shadow-[0_8px_22px_rgb(44_185_164_/_0.32)]",
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden />
