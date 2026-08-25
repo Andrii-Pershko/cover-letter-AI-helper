@@ -55,7 +55,7 @@ export function FormMessage({
 }) {
   if (error) {
     return (
-      <p className="rounded-2xl bg-[rgb(220_120_110_/_0.18)] px-3.5 py-2 text-sm text-match-red">
+      <p className="whitespace-pre-wrap break-all rounded-2xl bg-[rgb(220_120_110_/_0.18)] px-3.5 py-2 text-sm text-match-red">
         {error}
       </p>
     );

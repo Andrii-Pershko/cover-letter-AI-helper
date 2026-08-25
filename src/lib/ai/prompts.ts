@@ -15,22 +15,23 @@ function clip(text: string, max: number): string {
   return `${trimmed.slice(0, max)}\n[...обрізано]`;
 }
 
-export const MATCH_SYSTEM = `Ти аналітик відповідності кандидата вакансії. Відповідай українською.
+export const MATCH_SYSTEM = `Ти аналітик відповідності кандидата вакансії. Українською. Одразу JSON, без міркувань і без markdown.
 
 ПРАВИЛА:
-- Не вигадуй технології, продукти, роки досвіду, обов’язки.
-- Джерела правди: підтверджений стек, роки досвіду, CV, кейси проєктів. Ідеальні CL — НЕ джерело фактів.
-- Не перебільшуй рівень. Якщо вакансія Senior, а в профілі Middle / менше років — це gap.
-- Nice to have / «буде перевагою» не прирівнюй до обов’язкової вимоги (isMustHave=false).
+- Не вигадуй технології, продукти, роки, обов’язки.
+- Джерела: підтверджений стек, роки досвіду, CV, кейси. Ідеальні CL — не факти.
+- Не завищуй рівень. Senior у вакансії при меншому рівні/роках = gap.
+- Nice-to-have ≠ must-have (isMustHave=false).
 - Аліаси: Next.js=NextJS, RTK=Redux Toolkit, Postgres=PostgreSQL, Nest=NestJS, JS=JavaScript.
-- matchMin і matchMax — чесний діапазон 0–100. Краще занизити, ніж завищити.
-- recommendation: strong (сильний match), try (є сенс спробувати), weak (слабкий match).
-- green: кандидат закриває вимогу. explanation=null, techExplainer=null.
-- yellow: частково / суміжний досвід. Коротке explanation (1 речення). techExplainer=null.
-- red: немає в профілі. explanation — що бракує. techExplainer — що це за технологія/поняття, для чого, що саме хочуть у вакансії.
-- candidate — коротко «що є у кандидата» по цій вимозі (або «немає»).
-- gaps — лише основні прогалини, короткі рядки.
-- Вимоги групуй: спочатку must-have, потім nice-to-have. Не дублюй одне й те саме.`;
+- matchMin/matchMax — чесний діапазон 0–100, краще занизити.
+- recommendation: strong | try | weak.
+- green: explanation=null, techExplainer=null.
+- yellow: 1 коротке речення в explanation, techExplainer=null.
+- red: коротке explanation + techExplainer (що це, навіщо, що хочуть).
+- candidate — коротко що є (або «немає»).
+- gaps — до 5 коротких рядків.
+- Максимум 10 вимог, спочатку must-have, без дублів.
+- JSON: companyName, jobTitle, jobLevel, matchMin, matchMax, recommendation, gaps, requirements[{requirement, candidate, match: green|yellow|red, isMustHave, explanation, techExplainer}]. Не name і не числовий match.`;
 
 export const COVER_LETTER_SYSTEM = `Ти пишеш короткий cover letter українською від першої особи.
 
@@ -60,21 +61,18 @@ export function buildMatchPrompt(profile: ProfilePayload, jobText: string): stri
 Комерційний досвід: ${profile.yearsExperience ?? "—"} років
 Англійська: ${profile.englishLevel || "—"}
 Локація: ${profile.location || "—"}
-Формат роботи: ${profile.workFormat || "—"}
-Підтверджений стек (це база, не вигадуй зверху):
-${clip(profile.coreStack, 4000)}
-
-Обмеження для CL / нотатки:
-${clip(profile.avoidInCl || profile.extraNotes || "немає", 2000)}
-
+Формат: ${profile.workFormat || "—"}
+Стек:
+${clip(profile.coreStack, 1200)}
+${profile.extraNotes ? `\nНотатки:\n${clip(profile.extraNotes, 400)}\n` : ""}
 CV:
-${clip(profile.cvText || "", 24000)}
+${clip(profile.cvText || "", 6000)}
 
-КЕЙСИ ПРОЄКТІВ:
-${formatProjects(profile.projects)}
+КЕЙСИ:
+${formatProjects(profile.projects, "match")}
 
-ОПИС ВАКАНСІЇ:
-${clip(jobText, 20000)}`;
+ВАКАНСІЯ:
+${clip(jobText, 6000)}`;
 }
 
 export function buildCoverLetterPrompt(
@@ -104,31 +102,35 @@ Headline: ${profile.headline || "—"}
 Досвід: ${profile.yearsExperience ?? "—"} років
 Англійська: ${profile.englishLevel || "—"}
 Стек:
-${clip(profile.coreStack, 2000)}
+${clip(profile.coreStack, 1000)}
 
 Не згадуй у листі:
-${clip(profile.avoidInCl || "немає", 1500)}
+${clip(profile.avoidInCl || "немає", 500)}
 
 КЕЙС-БАНК (вибери ОДИН, usedProjectTitle = точна title):
-${formatProjects(profile.projects)}
+${formatProjects(profile.projects, "letter")}
 
-ІДЕАЛЬНІ COVER LETTER КОРИСТУВАЧА (еталон тону, не копіюй текст і не кради факти звідси):
+ІДЕАЛЬНІ COVER LETTER (тон, не копіюй речення і не бери факти):
 ${formatExamples(profile.exampleLetters)}
 
-ОПИС ВАКАНСІЇ:
-${clip(jobText, 12000)}`;
+ВАКАНСІЯ:
+${clip(jobText, 4000)}`;
 }
 
-function formatProjects(projects: Project[]): string {
+function formatProjects(projects: Project[], mode: "match" | "letter"): string {
   if (projects.length === 0) return "немає";
   return projects
     .map((project, index) => {
+      if (mode === "match") {
+        return `${index + 1}. ${project.title} | ${project.product || "—"} | ${project.stack.join(", ") || "—"}
+   ${clip(project.contribution, 280)}`;
+      }
       return `${index + 1}. title: ${project.title}
    product: ${project.product || "—"}
-   problem: ${clip(project.problem, 800)}
-   contribution: ${clip(project.contribution, 800)}
+   problem: ${clip(project.problem, 400)}
+   contribution: ${clip(project.contribution, 500)}
    stack: ${project.stack.join(", ") || "—"}
-   result: ${clip(project.result, 400)}
+   result: ${clip(project.result, 220)}
    tags: ${project.tags.join(", ") || "—"}`;
     })
     .join("\n\n");
@@ -139,10 +141,10 @@ function formatExamples(examples: ExampleCoverLetter[]): string {
   return examples
     .map((example, index) => {
       return `${index + 1}. ${example.title}
-   компанія/роль: ${example.company || "—"} / ${example.role || "—"}
-   чому вдалий: ${clip(example.whyItWorks, 600)}
+   ${example.company || "—"} / ${example.role || "—"}
+   чому вдалий: ${clip(example.whyItWorks, 280)}
    текст:
-${clip(example.body, 3500)}`;
+${clip(example.body, 1400)}`;
     })
     .join("\n\n");
 }

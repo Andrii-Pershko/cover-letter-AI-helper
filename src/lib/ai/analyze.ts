@@ -1,8 +1,8 @@
-import { generateObject } from "ai";
 import { prisma } from "@/lib/db";
 import { shouldWriteCoverLetter } from "@/lib/cl-settings";
 import { assembleCoverLetter } from "@/lib/utils";
-import { getGoogleProviderOptions, getModel, getModelId } from "./provider";
+import { generateJson } from "./generate-json";
+import { getModelId } from "./provider";
 import {
   buildCoverLetterPrompt,
   buildMatchPrompt,
@@ -21,49 +21,18 @@ type ProfilePayload = Profile & {
   exampleLetters: ExampleCoverLetter[];
 };
 
-const MATCH_TIMEOUT_MS = 60_000;
-const COVER_LETTER_TIMEOUT_MS = 40_000;
-
-async function timedGenerateObject<
-  T extends {
-    usage?: {
-      inputTokens?: number;
-      outputTokens?: number;
-      reasoningTokens?: number;
-    };
-  },
->(step: string, run: () => Promise<T>): Promise<T> {
-  const started = Date.now();
-  const result = await run();
-  console.info("[ai]", {
-    step,
-    model: getModelId(),
-    ms: Date.now() - started,
-    inputTokens: result.usage?.inputTokens,
-    outputTokens: result.usage?.outputTokens,
-    reasoningTokens: result.usage?.reasoningTokens,
-  });
-  return result;
-}
+const MATCH_TIMEOUT_MS = 90_000;
+const COVER_LETTER_TIMEOUT_MS = 45_000;
 
 export async function runAnalysis(profile: ProfilePayload, jobText: string) {
-  const model = getModel();
-  const providerOptions = getGoogleProviderOptions();
-
   console.info("[ai]", { step: "start", model: getModelId() });
 
-  const { object: analysis } = await timedGenerateObject("match", () =>
-    generateObject({
-      model,
-      schema: analysisSchema,
-      system: MATCH_SYSTEM,
-      prompt: buildMatchPrompt(profile, jobText),
-      maxOutputTokens: 8192,
-      maxRetries: 1,
-      abortSignal: AbortSignal.timeout(MATCH_TIMEOUT_MS),
-      providerOptions,
-    }),
-  );
+  const analysis = await generateJson("match", analysisSchema, {
+    system: MATCH_SYSTEM,
+    prompt: buildMatchPrompt(profile, jobText),
+    maxOutputTokens: 2048,
+    timeoutMs: MATCH_TIMEOUT_MS,
+  });
 
   const matchMin = Math.min(analysis.matchMin, analysis.matchMax);
   const matchMax = Math.max(analysis.matchMin, analysis.matchMax);
@@ -72,25 +41,19 @@ export async function runAnalysis(profile: ProfilePayload, jobText: string) {
   let usedProjectTitle: string | null = null;
 
   if (shouldWriteCoverLetter(matchMin, matchMax, profile.clMatchThreshold)) {
-    const { object: letter } = await timedGenerateObject("cover-letter", () =>
-      generateObject({
-        model,
-        schema: coverLetterSchema,
-        system: COVER_LETTER_SYSTEM,
-        prompt: buildCoverLetterPrompt(profile, jobText, {
-          companyName: analysis.companyName,
-          jobTitle: analysis.jobTitle,
-          jobLevel: analysis.jobLevel,
-          matchMin,
-          matchMax,
-          clCharLimit: profile.clCharLimit,
-        }),
-        maxOutputTokens: 4096,
-        maxRetries: 1,
-        abortSignal: AbortSignal.timeout(COVER_LETTER_TIMEOUT_MS),
-        providerOptions,
+    const letter = await generateJson("cover-letter", coverLetterSchema, {
+      system: COVER_LETTER_SYSTEM,
+      prompt: buildCoverLetterPrompt(profile, jobText, {
+        companyName: analysis.companyName,
+        jobTitle: analysis.jobTitle,
+        jobLevel: analysis.jobLevel,
+        matchMin,
+        matchMax,
+        clCharLimit: profile.clCharLimit,
       }),
-    );
+      maxOutputTokens: 1024,
+      timeoutMs: COVER_LETTER_TIMEOUT_MS,
+    });
 
     const knownTitles = new Set(profile.projects.map((project) => project.title));
     usedProjectTitle = knownTitles.has(letter.usedProjectTitle)

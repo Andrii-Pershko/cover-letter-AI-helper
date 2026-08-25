@@ -34,6 +34,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.ai-last-response.txt
 
 # env files (keep .env.example)
 .env
