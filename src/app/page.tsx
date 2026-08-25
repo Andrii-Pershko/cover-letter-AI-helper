@@ -1,16 +1,42 @@
+import { HistoryList, PAGE_SIZE } from "@/components/analyses/history-list";
 import { AnalyzeForm } from "@/components/analyze/analyze-form";
 import { SetupGate } from "@/components/analyze/setup-gate";
 import { Card, PageHeader } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 import { getProfile } from "@/lib/profile";
 import { getSetupStatus } from "@/lib/setup";
-import { recommendationLabel } from "@/lib/utils";
-import Link from "next/link";
 
 export const maxDuration = 60;
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const profile = await getProfile();
   const setup = getSetupStatus(profile);
+  const { page: pageRaw } = await searchParams;
+  const requestedPage = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
+
+  const total = await prisma.analysis.count({
+    where: { profileId: profile.id },
+  });
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(requestedPage, totalPages);
+  const analyses = await prisma.analysis.findMany({
+    where: { profileId: profile.id },
+    orderBy: { createdAt: "desc" },
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      companyName: true,
+      jobTitle: true,
+      matchMin: true,
+      matchMax: true,
+      recommendation: true,
+    },
+  });
 
   return (
     <>
@@ -27,34 +53,7 @@ export default async function HomePage() {
             clCharLimit={profile.clCharLimit}
           />
         </Card>
-        {profile.analyses.length > 0 ? (
-          <section>
-            <h2 className="mb-3 text-xl font-semibold tracking-tight text-ink">Історія</h2>
-            <ul className="flex flex-col gap-2">
-              {profile.analyses.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/analyses/${item.id}`}
-                    className="glass-row flex items-center justify-between gap-4 rounded-[18px] px-4 py-3.5 transition-all duration-200 hover:-translate-y-px hover:bg-white/50"
-                  >
-                    <span>
-                      <span className="block text-sm font-medium text-ink">
-                        {item.companyName || item.jobTitle || "Вакансія"}
-                      </span>
-                      <span className="text-xs text-muted">
-                        {item.jobTitle ? `${item.jobTitle} · ` : ""}
-                        {recommendationLabel(item.recommendation)}
-                      </span>
-                    </span>
-                    <span className="text-lg font-semibold tracking-tight text-ink">
-                      {item.matchMin}–{item.matchMax}%
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <HistoryList items={analyses} page={page} total={total} />
       </div>
     </>
   );

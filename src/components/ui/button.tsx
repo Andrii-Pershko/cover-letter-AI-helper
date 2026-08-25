@@ -14,6 +14,14 @@ const variants: Record<Variant, string> = {
     "text-match-red hover:bg-[rgb(220_120_110_/_0.14)] disabled:opacity-50",
 };
 
+export function buttonClassName(variant: Variant = "primary", className?: string) {
+  return cn(
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[14px] px-4 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgb(44_185_164_/_0.18)] disabled:cursor-not-allowed",
+    variants[variant],
+    className,
+  );
+}
+
 export function Button({
   className,
   variant = "primary",
@@ -23,11 +31,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(
-        "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[14px] px-4 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_rgb(44_185_164_/_0.18)] disabled:cursor-not-allowed",
-        variants[variant],
-        className,
-      )}
+      className={buttonClassName(variant, className)}
       {...props}
     />
   );

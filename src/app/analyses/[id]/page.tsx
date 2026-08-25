@@ -1,4 +1,5 @@
 import { ResultView } from "@/components/analyses/result-view";
+import { buttonClassName } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { getProfile } from "@/lib/profile";
@@ -25,10 +26,7 @@ export default async function AnalysisPage({
         title="Результат аналізу"
         description="Зелений — лише кружечок. Жовтий — коротке пояснення. Червоний — пояснення і що це за вимога."
         action={
-          <Link
-            href="/"
-            className="rounded-[14px] px-3 py-2 text-sm font-medium text-muted transition-all duration-200 hover:bg-white/35 hover:text-ink"
-          >
+          <Link href="/" className={buttonClassName("primary", "shrink-0")}>
             Новий аналіз
           </Link>
         }
