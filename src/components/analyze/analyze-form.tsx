@@ -31,9 +31,11 @@ export function AnalyzeForm({
 
   useEffect(() => {
     if (state?.id) {
-      router.push(`/analyses/${state.id}`);
+      router.replace(`/analyses/${state.id}`);
     }
   }, [router, state?.id]);
+
+  const overlayOpen = pending || Boolean(state?.id);
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -55,7 +57,7 @@ export function AnalyzeForm({
               min={CL_MATCH_THRESHOLD_MIN}
               max={CL_MATCH_THRESHOLD_MAX}
               required
-              disabled={disabled || pending}
+              disabled={disabled || overlayOpen}
               defaultValue={clMatchThreshold}
               placeholder="80"
             />
@@ -73,7 +75,7 @@ export function AnalyzeForm({
               max={CL_CHAR_LIMIT_MAX}
               step={50}
               required
-              disabled={disabled || pending}
+              disabled={disabled || overlayOpen}
               defaultValue={clCharLimit}
               placeholder="1500"
             />
@@ -86,16 +88,16 @@ export function AnalyzeForm({
         required
         minLength={120}
         rows={16}
-        disabled={disabled || pending}
+        disabled={disabled || overlayOpen}
         placeholder="Встав текст вакансії: компанія, рівень, обов'язки, must-have, nice-to-have..."
       />
       <FormMessage error={state?.error} />
       <div>
-        <Button disabled={disabled || pending}>
-          {pending ? "Аналізую вакансію…" : "Проаналізувати"}
+        <Button disabled={disabled || overlayOpen}>
+          {overlayOpen ? "Аналізую вакансію…" : "Проаналізувати"}
         </Button>
       </div>
-      <AiOverlay open={pending} />
+      <AiOverlay open={overlayOpen} />
     </form>
   );
 }

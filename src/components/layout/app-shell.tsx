@@ -1,5 +1,6 @@
 "use client";
 
+import { getAppVersionLabel } from "@/lib/app-version";
 import { logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -122,14 +123,21 @@ export function AppShell({
               Match & letter
             </span>
           </Link>
-          <button
-            type="button"
-            aria-expanded={menuOpen}
-            aria-controls="mobile-menu"
-            aria-label={menuOpen ? "Закрити меню" : "Відкрити меню"}
-            onClick={() => setMenuOpen((open) => !open)}
-            className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-ink transition-colors duration-200 hover:bg-white/35"
-          >
+          <div className="flex items-center gap-2">
+            <span
+              className="font-mono text-[10px] tracking-wide text-muted"
+              title="Версія додатка"
+            >
+              {getAppVersionLabel()}
+            </span>
+            <button
+              type="button"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              aria-label={menuOpen ? "Закрити меню" : "Відкрити меню"}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-ink transition-colors duration-200 hover:bg-white/35"
+            >
             <span className="relative block h-3.5 w-5">
               <span
                 className={cn(
@@ -151,7 +159,15 @@ export function AppShell({
               />
             </span>
           </button>
+          </div>
         </header>
+
+        <span
+          className="pointer-events-none absolute right-5 top-4 z-40 hidden font-mono text-[11px] tracking-wide text-muted lg:block"
+          title="Версія додатка"
+        >
+          {getAppVersionLabel()}
+        </span>
 
         <div
           id="mobile-menu"
