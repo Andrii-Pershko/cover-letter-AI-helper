@@ -12,7 +12,7 @@ export function SetupGate({ setup }: { setup: SetupStatus }) {
           <li key={item.label}>
             <Link
               href={item.href}
-              className="font-medium text-ink underline-offset-2 transition-colors hover:text-accent hover:underline"
+              className="cursor-pointer font-medium text-ink underline-offset-2 transition-colors hover:text-accent hover:underline"
             >
               {item.label}
             </Link>

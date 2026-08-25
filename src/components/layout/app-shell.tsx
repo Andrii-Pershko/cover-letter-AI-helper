@@ -115,7 +115,7 @@ export function AppShell({
         className="glass-shell relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col overflow-hidden lg:flex-row"
       >
         <header className="relative z-50 flex items-center justify-between border-b border-white/25 px-4 py-3 lg:hidden">
-          <Link href={email ? "/" : "/login"} className="min-w-0 px-0.5">
+          <Link href={email ? "/" : "/login"} className="min-w-0 cursor-pointer px-0.5">
             <span className="block text-lg font-semibold tracking-tight text-ink">
               AI-CL
             </span>
@@ -136,7 +136,7 @@ export function AppShell({
               aria-controls="mobile-menu"
               aria-label={menuOpen ? "Закрити меню" : "Відкрити меню"}
               onClick={() => setMenuOpen((open) => !open)}
-              className="flex size-10 shrink-0 items-center justify-center rounded-2xl text-ink transition-colors duration-200 hover:bg-white/35"
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl text-ink transition-colors duration-200 hover:bg-white/35"
             >
             <span className="relative block h-3.5 w-5">
               <span
@@ -171,6 +171,8 @@ export function AppShell({
 
         <div
           id="mobile-menu"
+          hidden={!menuOpen}
+          inert={!menuOpen ? true : undefined}
           className={cn(
             "absolute inset-0 z-40 lg:hidden",
             menuOpen ? "pointer-events-auto" : "pointer-events-none",
@@ -181,7 +183,7 @@ export function AppShell({
             aria-label="Закрити меню"
             onClick={() => setMenuOpen(false)}
             className={cn(
-              "absolute inset-0 bg-[rgb(20_48_44_/_0.22)] backdrop-blur-[6px] transition-opacity duration-200",
+              "absolute inset-0 cursor-pointer bg-[rgb(20_48_44_/_0.22)] backdrop-blur-[6px] transition-opacity duration-200",
               menuOpen ? "opacity-100" : "opacity-0",
             )}
           />
@@ -204,7 +206,7 @@ export function AppShell({
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                        "flex cursor-pointer items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                         active
                           ? "bg-accent text-white"
                           : "text-muted hover:bg-white/35 hover:text-ink",
@@ -243,7 +245,7 @@ export function AppShell({
         </div>
 
         <aside className="hidden shrink-0 flex-col gap-6 border-white/25 px-5 py-7 lg:flex lg:w-60 lg:border-r">
-          <Link href={email ? "/" : "/login"} className="shrink-0 px-1">
+          <Link href={email ? "/" : "/login"} className="shrink-0 cursor-pointer px-1">
             <span className="block text-lg font-semibold tracking-tight text-ink">
               AI-CL
             </span>
@@ -279,7 +281,7 @@ export function AppShell({
                     href={item.href}
                     data-active={active ? "true" : undefined}
                     className={cn(
-                      "relative z-10 flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
+                      "relative z-10 flex cursor-pointer items-center gap-2.5 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                       active
                         ? "text-white"
                         : "text-muted hover:bg-white/35 hover:text-ink",

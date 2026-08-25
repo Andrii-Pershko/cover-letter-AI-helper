@@ -126,23 +126,36 @@ textarea {
   font: inherit;
 }
 
-a,
+button,
+input:where([type="button"], [type="reset"], [type="submit"]) {
+  appearance: none;
+}
+
+a[href],
 button:not(:disabled),
 label[for],
 select:not(:disabled),
 summary,
+input[type="file"]:not(:disabled),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="reset"]:not(:disabled),
 [role="button"]:not(:disabled),
+[role="link"],
 [role="option"],
 [role="menuitem"],
 [role="tab"] {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 button:disabled,
 select:disabled,
 input:disabled,
-textarea:disabled {
-  cursor: not-allowed;
+textarea:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed !important;
 }
 
 textarea {

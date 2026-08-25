@@ -15,7 +15,7 @@ export default function RegisterPage() {
           Вже є акаунт?{" "}
           <Link
             href="/login"
-            className="font-medium text-accent transition-colors hover:text-accent-hover"
+            className="cursor-pointer font-medium text-accent transition-colors hover:text-accent-hover"
           >
             Увійти
           </Link>
