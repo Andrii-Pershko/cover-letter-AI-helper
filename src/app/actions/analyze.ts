@@ -51,6 +51,15 @@ export async function analyzeJob(
     revalidatePath("/");
     return { id: analysis.id };
   } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.name === "TimeoutError" || error.name === "AbortError")
+    ) {
+      return {
+        error:
+          "Gemini не відповів за 55 секунд (часто зависає thinking на structured JSON). Спробуй ще раз або поверни gemini-2.5-flash.",
+      };
+    }
     const message =
       error instanceof Error ? error.message : "Не вдалося виконати аналіз";
     return { error: message };
