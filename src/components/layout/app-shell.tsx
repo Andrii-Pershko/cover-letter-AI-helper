@@ -111,10 +111,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh flex-col p-2.5 sm:p-4 lg:p-6">
       <div
-        className={cn(
-          "glass-shell relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col lg:flex-row",
-          menuOpen && "max-lg:overflow-hidden",
-        )}
+        className="glass-shell relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col overflow-hidden lg:flex-row"
       >
         <header className="relative z-50 flex items-center justify-between border-b border-white/25 px-4 py-3 lg:hidden">
           <Link href={email ? "/" : "/login"} className="min-w-0 px-0.5">
