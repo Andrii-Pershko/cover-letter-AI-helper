@@ -56,10 +56,13 @@ npm run dev
 
 `DATABASE_URL` у `.env` для цього режиму — `localhost:3402` (хостовий порт Postgres). У контейнері app compose підміняє його на хост `db:5432`.
 
-## BD comands
-```
-docker compose exec db pg_dump -U aicl aicl > backup.sql
+## Команди БД
+
+Користувач і назва бази — з `POSTGRES_USER` / `POSTGRES_DB` у compose (не хардкодити бойові значення).
+
+```bash
+docker compose exec db pg_dump -U <postgres_user> <database> > backup.sql
 # на новому сервері
 docker compose up db -d
-docker compose exec -T db psql -U aicl aicl < backup.sql
+docker compose exec -T db psql -U <postgres_user> <database> < backup.sql
 ```
