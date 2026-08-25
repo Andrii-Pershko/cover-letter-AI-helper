@@ -13,8 +13,8 @@ export function HistoryList({
 }: {
   items: {
     id: string;
-    companyName: string;
-    jobTitle: string;
+    companyName: string | null;
+    jobTitle: string | null;
     matchMin: number;
     matchMax: number;
     recommendation: string;
