@@ -66,3 +66,6 @@ docker compose exec db pg_dump -U <postgres_user> <database> > backup.sql
 docker compose up db -d
 docker compose exec -T db psql -U <postgres_user> <database> < backup.sql
 ```
+## Usefull
+docker compose pull
+docker compose up -d

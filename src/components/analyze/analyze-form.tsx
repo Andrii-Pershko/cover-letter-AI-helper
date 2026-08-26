@@ -12,7 +12,7 @@ import {
   CL_MATCH_THRESHOLD_MIN,
 } from "@/lib/cl-settings";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, type KeyboardEvent } from "react";
 
 export function AnalyzeForm({
   disabled,
@@ -36,6 +36,19 @@ export function AnalyzeForm({
   }, [router, state?.id]);
 
   const overlayOpen = pending || Boolean(state?.id);
+
+  function onJobTextKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      event.key !== "Enter" ||
+      event.shiftKey ||
+      event.nativeEvent.isComposing
+    ) {
+      return;
+    }
+    event.preventDefault();
+    if (disabled || overlayOpen) return;
+    event.currentTarget.form?.requestSubmit();
+  }
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -83,14 +96,20 @@ export function AnalyzeForm({
         </div>
       </div>
 
-      <Textarea
-        name="jobText"
-        required
-        minLength={120}
-        rows={16}
-        disabled={disabled || overlayOpen}
-        placeholder="Встав текст вакансії: компанія, рівень, обов'язки, must-have, nice-to-have..."
-      />
+      <div>
+        <Textarea
+          name="jobText"
+          required
+          minLength={120}
+          rows={16}
+          disabled={disabled || overlayOpen}
+          placeholder="Встав текст вакансії: компанія, рівень, обов'язки, must-have, nice-to-have..."
+          onKeyDown={onJobTextKeyDown}
+        />
+        <p className="mt-1.5 text-xs text-muted">
+          Enter — проаналізувати, Shift+Enter — новий рядок
+        </p>
+      </div>
       <FormMessage error={state?.error} />
       <div>
         <Button disabled={disabled || overlayOpen}>

@@ -1,8 +1,8 @@
-import { HistoryList, PAGE_SIZE } from "@/components/analyses/history-list";
+import { HistoryList } from "@/components/analyses/history-list";
 import { AnalyzeForm } from "@/components/analyze/analyze-form";
 import { SetupGate } from "@/components/analyze/setup-gate";
 import { Card, PageHeader } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
+import { getAnalysisHistoryPage } from "@/lib/analysis-history";
 import { getProfile } from "@/lib/profile";
 import { getSetupStatus } from "@/lib/setup";
 
@@ -18,25 +18,10 @@ export default async function HomePage({
   const { page: pageRaw } = await searchParams;
   const requestedPage = Math.max(1, Number.parseInt(pageRaw ?? "1", 10) || 1);
 
-  const total = await prisma.analysis.count({
-    where: { profileId: profile.id },
-  });
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const page = Math.min(requestedPage, totalPages);
-  const analyses = await prisma.analysis.findMany({
-    where: { profileId: profile.id },
-    orderBy: { createdAt: "desc" },
-    skip: (page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
-    select: {
-      id: true,
-      companyName: true,
-      jobTitle: true,
-      matchMin: true,
-      matchMax: true,
-      recommendation: true,
-    },
-  });
+  const { items: analyses, page, total } = await getAnalysisHistoryPage(
+    profile.id,
+    requestedPage,
+  );
 
   return (
     <>

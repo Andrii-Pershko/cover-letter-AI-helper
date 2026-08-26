@@ -1,30 +1,69 @@
-import { buttonClassName } from "@/components/ui/button";
-import { recommendationLabel } from "@/lib/utils";
+"use client";
+
+import { getAnalysisHistory } from "@/app/actions/analyses";
+import { Button } from "@/components/ui/button";
+import type { AnalysisHistoryItem } from "@/lib/analysis-history";
+import { HISTORY_PAGE_SIZE } from "@/lib/analysis-history";
+import { cn, recommendationLabel } from "@/lib/utils";
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 
-const PAGE_SIZE = 5;
+function historyHref(page: number) {
+  return page <= 1 ? "/" : `/?page=${page}`;
+}
 
-export { PAGE_SIZE };
+function pageFromSearch(search: string) {
+  return Math.max(
+    1,
+    Number.parseInt(new URLSearchParams(search).get("page") ?? "1", 10) || 1,
+  );
+}
 
 export function HistoryList({
-  items,
-  page,
-  total,
+  items: initialItems,
+  page: initialPage,
+  total: initialTotal,
 }: {
-  items: {
-    id: string;
-    companyName: string | null;
-    jobTitle: string | null;
-    matchMin: number;
-    matchMax: number;
-    recommendation: string;
-  }[];
+  items: AnalysisHistoryItem[];
   page: number;
   total: number;
 }) {
+  const [items, setItems] = useState(initialItems);
+  const [page, setPage] = useState(initialPage);
+  const [total, setTotal] = useState(initialTotal);
+  const [pending, setPending] = useState(false);
+
+  const loadPage = useCallback(async (nextPage: number, updateUrl: boolean) => {
+    setPending(true);
+    try {
+      const result = await getAnalysisHistory(nextPage);
+      setItems(result.items);
+      setPage(result.page);
+      setTotal(result.total);
+      if (updateUrl) {
+        const href = historyHref(result.page);
+        const current = `${window.location.pathname}${window.location.search}`;
+        if (current !== href) {
+          window.history.pushState(null, "", href);
+        }
+      }
+    } finally {
+      setPending(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    function onPopState() {
+      void loadPage(pageFromSearch(window.location.search), false);
+    }
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [loadPage]);
+
   if (total === 0) return null;
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / HISTORY_PAGE_SIZE));
   const prevPage = page > 1 ? page - 1 : null;
   const nextPage = page < totalPages ? page + 1 : null;
 
@@ -33,7 +72,13 @@ export function HistoryList({
       <h2 className="mb-3 text-xl font-semibold tracking-tight text-ink">
         Історія
       </h2>
-      <ul className="flex flex-col gap-2">
+      <ul
+        className={cn(
+          "flex flex-col gap-2 transition-opacity duration-200",
+          pending && "opacity-60",
+        )}
+        aria-busy={pending}
+      >
         {items.map((item) => (
           <li key={item.id}>
             <Link
@@ -61,33 +106,25 @@ export function HistoryList({
           className="mt-4 flex items-center justify-between gap-3"
           aria-label="Сторінки історії"
         >
-          {prevPage ? (
-            <Link
-              href={prevPage === 1 ? "/" : `/?page=${prevPage}`}
-              className={buttonClassName("secondary")}
-            >
-              Назад
-            </Link>
-          ) : (
-            <span className={buttonClassName("secondary", "pointer-events-none opacity-40")}>
-              Назад
-            </span>
-          )}
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!prevPage || pending}
+            onClick={() => prevPage && void loadPage(prevPage, true)}
+          >
+            Назад
+          </Button>
           <span className="text-sm text-muted">
             {page} / {totalPages}
           </span>
-          {nextPage ? (
-            <Link
-              href={`/?page=${nextPage}`}
-              className={buttonClassName("secondary")}
-            >
-              Далі
-            </Link>
-          ) : (
-            <span className={buttonClassName("secondary", "pointer-events-none opacity-40")}>
-              Далі
-            </span>
-          )}
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!nextPage || pending}
+            onClick={() => nextPage && void loadPage(nextPage, true)}
+          >
+            Далі
+          </Button>
         </nav>
       ) : null}
     </section>
