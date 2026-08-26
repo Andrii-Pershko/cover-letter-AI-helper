@@ -2,7 +2,7 @@ import { HistoryList } from "@/components/analyses/history-list";
 import { AnalyzeForm } from "@/components/analyze/analyze-form";
 import { SetupGate } from "@/components/analyze/setup-gate";
 import { Card, PageHeader } from "@/components/ui/card";
-import { getAnalysisHistoryPage } from "@/lib/analysis-history";
+import { getAnalysisHistoryPage } from "@/lib/analysis-history-query";
 import { getProfile } from "@/lib/profile";
 import { getSetupStatus } from "@/lib/setup";
 

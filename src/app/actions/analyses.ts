@@ -1,9 +1,7 @@
 "use server";
 
-import {
-  getAnalysisHistoryPage,
-  type AnalysisHistoryPage,
-} from "@/lib/analysis-history";
+import type { AnalysisHistoryPage } from "@/lib/analysis-history";
+import { getAnalysisHistoryPage } from "@/lib/analysis-history-query";
 import { requireSession } from "@/lib/auth/require-session";
 import { prisma } from "@/lib/db";
 
