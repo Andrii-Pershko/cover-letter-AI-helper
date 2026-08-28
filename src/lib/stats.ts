@@ -18,9 +18,41 @@ export type StatsView = {
   totals: { analyses: number; applications: number };
 };
 
+export const STATS_TABLE_PAGE_SIZE = 7;
+
+export type StatsTablePage = {
+  rows: StatsRow[];
+  page: number;
+  totalPages: number;
+  totalRows: number;
+};
+
 export function parseStatsPeriod(value: string | undefined): StatsPeriod {
   if (value === "week" || value === "month" || value === "day") return value;
   return "day";
+}
+
+export function parseStatsPage(value: string | undefined): number {
+  const parsed = Number.parseInt(value ?? "1", 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return 1;
+  return parsed;
+}
+
+export function paginateStatsRows(
+  rows: StatsRow[],
+  page: number,
+  pageSize = STATS_TABLE_PAGE_SIZE,
+): StatsTablePage {
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * pageSize;
+  return {
+    rows: rows.slice(start, start + pageSize),
+    page: safePage,
+    totalPages,
+    totalRows,
+  };
 }
 
 export function dateKeyInZone(

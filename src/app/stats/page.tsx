@@ -1,13 +1,17 @@
+import { StatsTablePagination } from "@/components/stats/table-pagination";
 import { Card, PageHeader } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 import { getProfile } from "@/lib/profile";
 import {
   buildStatsView,
+  paginateStatsRows,
+  parseStatsPage,
   parseStatsPeriod,
   type StatsPeriod,
 } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const PERIODS: Array<{ id: StatsPeriod; label: string }> = [
   { id: "day", label: "День" },
@@ -15,19 +19,32 @@ const PERIODS: Array<{ id: StatsPeriod; label: string }> = [
   { id: "month", label: "Місяць" },
 ];
 
+function statsHref(period: StatsPeriod, page = 1) {
+  const params = new URLSearchParams();
+  if (period !== "day") params.set("period", period);
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `/stats?${query}` : "/stats";
+}
+
 export default async function StatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ period?: string; page?: string }>;
 }) {
   const profile = await getProfile();
-  const { period: periodRaw } = await searchParams;
+  const { period: periodRaw, page: pageRaw } = await searchParams;
   const period = parseStatsPeriod(periodRaw);
   const events = await prisma.analysis.findMany({
     where: { profileId: profile.id },
     select: { createdAt: true, appliedAt: true },
   });
   const stats = buildStatsView(period, events);
+  const requestedPage = parseStatsPage(pageRaw);
+  const table = paginateStatsRows(stats.rows, requestedPage);
+  if (requestedPage !== table.page) {
+    redirect(statsHref(period, table.page));
+  }
 
   const currentLabel =
     period === "day" ? "сьогодні" : period === "week" ? "цей тиждень" : "цей місяць";
@@ -46,7 +63,7 @@ export default async function StatsPage({
         >
           {PERIODS.map((item) => {
             const active = item.id === period;
-            const href = item.id === "day" ? "/stats" : `/stats?period=${item.id}`;
+            const href = statsHref(item.id);
             return (
               <Link
                 key={item.id}
@@ -109,7 +126,7 @@ export default async function StatsPage({
                 </tr>
               </thead>
               <tbody>
-                {stats.rows.map((row) => (
+                {table.rows.map((row) => (
                   <tr
                     key={row.key}
                     className="border-b border-white/20 last:border-0"
@@ -128,6 +145,11 @@ export default async function StatsPage({
               </tbody>
             </table>
           </div>
+          <StatsTablePagination
+            page={table.page}
+            totalPages={table.totalPages}
+            hrefForPage={(page) => statsHref(period, page)}
+          />
         </Card>
       </div>
     </>

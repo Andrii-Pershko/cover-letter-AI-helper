@@ -46,6 +46,12 @@ function formatAppliedAt(value: string | null) {
   }).format(new Date(value));
 }
 
+const SCROLLABLE_COLUMNS = new Set<PipelineStatus>([
+  "applied",
+  "interview",
+  "test",
+]);
+
 function columnFromPoint(x: number, y: number): PipelineStatus | null {
   const target = document
     .elementsFromPoint(x, y)
@@ -189,17 +195,19 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           {PIPELINE_COLUMNS.map((column) => {
             const columnCards = grouped[column.id];
             const isOver = overColumn === column.id;
+            const isScrollable = SCROLLABLE_COLUMNS.has(column.id);
             return (
               <section
                 key={column.id}
                 data-column={column.id}
                 className={cn(
                   "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200",
+                  isScrollable && "max-h-[600px] overflow-hidden",
                   isOver &&
-                    "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
+                  "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
                 )}
               >
-                <header className="pointer-events-none mb-3 flex items-baseline justify-between gap-2 px-1">
+                <header className="pointer-events-none mb-3 flex shrink-0 items-baseline justify-between gap-2 px-1">
                   <h2 className="text-sm font-semibold tracking-tight text-ink">
                     {column.label}
                   </h2>
@@ -207,7 +215,14 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
                     {columnCards.length}
                   </span>
                 </header>
-                <ul className="pointer-events-none flex flex-1 flex-col gap-2">
+                <ul
+                  className={cn(
+                    "flex min-h-0 flex-1 flex-col gap-2",
+                    isScrollable
+                      ? "glass-scroll pointer-events-auto overflow-y-auto pr-1"
+                      : "pointer-events-none",
+                  )}
+                >
                   {columnCards.map((card) => (
                     <li key={card.id} className="pointer-events-auto">
                       <KanbanCard
@@ -277,7 +292,7 @@ function KanbanCard({
           type="button"
           aria-label="Перетягнути вакансію"
           onPointerDown={(event) => onDragStart(event, card)}
-          className="mt-0.5 flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-muted hover:bg-white/50 hover:text-ink active:cursor-grabbing"
+          className="mt-0.5 flex shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-muted hover:bg-white/50 hover:text-ink active:cursor-grabbing"
         >
           <GripVertical className="size-4" aria-hidden />
         </button>
