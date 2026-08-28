@@ -63,7 +63,7 @@ export function ResultView({
           className={cn(
             "mt-3 inline-flex rounded-full px-3 py-1 text-sm font-medium",
             recommendationBadge[analysis.recommendation] ??
-              "bg-white/40 text-muted",
+            "bg-white/40 text-muted",
           )}
         >
           {recommendationLabel(analysis.recommendation)}
@@ -87,6 +87,14 @@ export function ResultView({
           </ul>
         </Card>
       ) : null}
+
+      <Card>
+        <ApplyPanel
+          analysisId={analysis.id}
+          jobUrl={analysis.jobUrl}
+          applied={Boolean(analysis.pipelineStatus)}
+        />
+      </Card>
 
       {analysis.coverLetter ? (
         <Card>
@@ -132,13 +140,7 @@ export function ResultView({
         </Card>
       )}
 
-      <Card>
-        <ApplyPanel
-          analysisId={analysis.id}
-          jobUrl={analysis.jobUrl}
-          applied={Boolean(analysis.pipelineStatus)}
-        />
-      </Card>
+
     </div>
   );
 }
