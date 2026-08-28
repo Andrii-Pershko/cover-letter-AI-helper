@@ -6,7 +6,6 @@ import { parseClCharLimit, parseClMatchThreshold } from "@/lib/cl-settings";
 import { prisma } from "@/lib/db";
 import { getProfileForAnalysis } from "@/lib/profile";
 import { getSetupStatus } from "@/lib/setup";
-import { normalizeJobUrl } from "@/lib/utils";
 
 export type AnalyzeState = { error?: string; id?: string } | null;
 
@@ -17,15 +16,6 @@ export async function analyzeJob(
   const jobText = String(formData.get("jobText") ?? "").trim();
   if (jobText.length < 120) {
     return { error: "Встав повніший опис вакансії (хоча б кілька вимог)." };
-  }
-
-  const jobUrlRaw = String(formData.get("jobUrl") ?? "").trim();
-  let jobUrl: string | null = null;
-  if (jobUrlRaw) {
-    jobUrl = normalizeJobUrl(jobUrlRaw);
-    if (!jobUrl) {
-      return { error: "Лінк на вакансію має бути коректним URL." };
-    }
   }
 
   const clMatchThreshold = parseClMatchThreshold(
@@ -57,7 +47,6 @@ export async function analyzeJob(
     const analysis = await runAnalysis(
       { ...profile, clMatchThreshold, clCharLimit },
       jobText,
-      { jobUrl },
     );
     revalidatePath("/", "layout");
     return { id: analysis.id };

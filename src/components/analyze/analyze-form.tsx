@@ -97,21 +97,6 @@ export function AnalyzeForm({
       </div>
 
       <div>
-        <Field
-          label="Лінк на вакансію"
-          htmlFor="jobUrl"
-          hint="Необов'язково, зберігається для статистики й моніторингу"
-        >
-          <Input
-            id="jobUrl"
-            name="jobUrl"
-            type="text"
-            inputMode="url"
-            autoComplete="url"
-            disabled={disabled || overlayOpen}
-            placeholder="https://djinni.co/jobs/..."
-          />
-        </Field>
         <Textarea
           name="jobText"
           required
@@ -120,7 +105,6 @@ export function AnalyzeForm({
           disabled={disabled || overlayOpen}
           placeholder="Встав текст вакансії: компанія, рівень, обов'язки, must-have, nice-to-have..."
           onKeyDown={onJobTextKeyDown}
-          className="mt-4"
         />
         <p className="mt-1.5 text-xs text-muted">
           Enter — проаналізувати, Shift+Enter — новий рядок

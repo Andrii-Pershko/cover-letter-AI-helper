@@ -184,8 +184,8 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           {error}
         </p>
       ) : null}
-      <div className="-mx-1 overflow-x-auto pb-2">
-        <div className="flex min-w-[920px] gap-3 px-1 lg:min-w-0 lg:grid lg:grid-cols-5">
+      <div className="-mx-1 overflow-x-auto p-1 pb-2">
+        <div className="flex min-w-[920px] gap-3 lg:min-w-0 lg:grid lg:grid-cols-5">
           {PIPELINE_COLUMNS.map((column) => {
             const columnCards = grouped[column.id];
             const isOver = overColumn === column.id;

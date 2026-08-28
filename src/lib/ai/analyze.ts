@@ -27,7 +27,6 @@ const COVER_LETTER_TIMEOUT_MS = 45_000;
 export async function runAnalysis(
   profile: ProfilePayload,
   jobText: string,
-  extras: { jobUrl?: string | null } = {},
 ) {
   console.info("[ai]", { step: "start", model: getModelId() });
 
@@ -74,7 +73,7 @@ export async function runAnalysis(
       companyName: analysis.companyName,
       jobTitle: analysis.jobTitle,
       jobLevel: analysis.jobLevel,
-      jobUrl: extras.jobUrl ?? null,
+      jobUrl: null,
       jobText,
       matchMin,
       matchMax,

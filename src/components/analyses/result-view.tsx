@@ -1,4 +1,4 @@
-import { ApplyButton } from "@/components/analyses/apply-button";
+import { ApplyPanel } from "@/components/analyses/apply-panel";
 import { CopyButton } from "@/components/analyses/copy-button";
 import { buttonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -131,6 +131,14 @@ export function ResultView({
           </div>
         </Card>
       )}
+
+      <Card>
+        <ApplyPanel
+          analysisId={analysis.id}
+          jobUrl={analysis.jobUrl}
+          applied={Boolean(analysis.pipelineStatus)}
+        />
+      </Card>
     </div>
   );
 }
@@ -139,10 +147,6 @@ function CoverLetterActions({ analysis }: { analysis: Result }) {
   return (
     <div className="flex flex-wrap gap-2 shrink-0">
       {analysis.coverLetter ? <CopyButton text={analysis.coverLetter} /> : null}
-      <ApplyButton
-        analysisId={analysis.id}
-        applied={Boolean(analysis.pipelineStatus)}
-      />
       <Link href="/" className={buttonClassName("primary")}>
         Новий аналіз
       </Link>

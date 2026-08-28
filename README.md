@@ -58,8 +58,7 @@ npm run dev
 
 ## Команди БД
 
-Користувач і назва бази — з `POSTGRES_USER` / `POSTGRES_DB` у compose (не хардкодити бойові значення).
-
+Користувач і назва бази — з `POSTGRES_USER` / `POSTGRES_DB` у compose
 ```bash
 docker compose exec db pg_dump -U <postgres_user> <database> > backup.sql
 # на новому сервері
@@ -67,5 +66,7 @@ docker compose up db -d
 docker compose exec -T db psql -U <postgres_user> <database> < backup.sql
 ```
 ## Usefull
+
+git pull
 docker compose pull
-docker compose up -d
+docker compose up -d --force-recreate migrate app
