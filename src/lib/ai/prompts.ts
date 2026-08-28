@@ -31,6 +31,7 @@ export const MATCH_SYSTEM = `Ти аналітик відповідності к
 - candidate — коротко що є (або «немає»).
 - gaps — до 5 коротких рядків.
 - Максимум 10 вимог, спочатку must-have, без дублів.
+- companyName — лише явна назва з тексту вакансії, інакше null. Не вигадуй і не бери з CV/кейсів.
 - JSON: companyName, jobTitle, jobLevel, matchMin, matchMax, recommendation, gaps, requirements[{requirement, candidate, match: green|yellow|red, isMustHave, explanation, techExplainer}]. Не name і не числовий match.`;
 
 export const COVER_LETTER_SYSTEM = `Ти пишеш короткий cover letter українською від першої особи — так, ніби людина швидко накидає лист, не «продає себе».
@@ -38,8 +39,8 @@ export const COVER_LETTER_SYSTEM = `Ти пишеш короткий cover lette
 Еталон — ідеальні листи користувача: тон, довжина, кількість речень, як заходять у кейс. Скопіюй малюнок абзаців, не речення і не їхні компанії/кейси.
 
 ЖОРСТКА СТРУКТУРА (окремі поля):
-1. greeting — «Вітаю, командо Geniusee!»
-2. whyJob — 1–2 речення. Конкретно: продукт, задачі або формат з вакансії. Спокійно, без пафосу.
+1. greeting — якщо в вакансії є компанія: «Вітаю, командо {назва}!». Якщо компанії немає — лише «Вітаю!» без будь-якої назви. НІКОЛИ не бери компанію з ідеальних CL.
+2. whyJob — щонайменше 2 речення (не одне). Конкретно з ВАКАНСІЇ: продукт, задачі або формат. Спокійно, без пафосу. Не згадуй компанії з ідеальних CL.
 3. aboutAndCase — 2–3 речення. «Я розробник із N роками… стек.» Далі ОДИН кейс: що за продукт і що зробив, без розбору frontend/backend і без історії «провів аналіз → UI → бекенд → Excel».
 4. closing — лише: «Буду радий поспілкуватися, детальніше розповісти про свій досвід та виконати тестове завдання.»
 5. usedProjectTitle — точна title з кейс-банку.
@@ -88,10 +89,15 @@ export function buildCoverLetterPrompt(
   },
 ): string {
   const ceiling = analysis.clCharLimit;
+  const companyLine = analysis.companyName
+    ? `Компанія: ${analysis.companyName} — greeting звертається саме до неї, не до іншої.`
+    : `Компанія: у вакансії не вказано. greeting = «Вітаю!» БЕЗ назви компанії. Заборонено підставляти компанії з ідеальних CL.`;
   return `Вакансія: ${analysis.jobTitle || "не вказано"}
-Компанія: ${analysis.companyName || "не вказано"}
+${companyLine}
 Рівень вакансії: ${analysis.jobLevel || "не вказано"}
 Match: ${analysis.matchMin}–${analysis.matchMax}%
+
+whyJob: мінімум 2 речення про продукт, задачі або формат саме цієї вакансії. Не одне коротке.
 
 ДОВЖИНА: чотири поля разом — як ідеальні листи нижче. Стеля ${ceiling} символів. Не добивай ліміт «водою». Контакти не пиши.
 
@@ -137,13 +143,39 @@ function formatProjects(projects: Project[], mode: "match" | "letter"): string {
 
 function formatExamples(examples: ExampleCoverLetter[]): string {
   if (examples.length === 0) return "немає";
+  const companies = uniqueCompanies(examples);
   return examples
     .map((example, index) => {
       return `${index + 1}. ${example.title}
-   ${example.company || "—"} / ${example.role || "—"}
-   чому вдалий: ${clip(example.whyItWorks, 400)}
+   роль: ${example.role || "—"} (компанію еталона ігноруй, не копіюй у новий лист)
+   чому вдалий: ${redactCompanies(clip(example.whyItWorks, 400), companies)}
    текст:
-${clip(example.body, 2500)}`;
+${redactCompanies(clip(example.body, 2500), companies)}`;
     })
     .join("\n\n");
+}
+
+function uniqueCompanies(examples: ExampleCoverLetter[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const example of examples) {
+    const company = example.company.trim();
+    const key = company.toLowerCase();
+    if (company.length < 3 || seen.has(key)) continue;
+    seen.add(key);
+    result.push(company);
+  }
+  return result;
+}
+
+function redactCompanies(text: string, companies: string[]): string {
+  return companies.reduce(
+    (acc, company) =>
+      acc.replace(new RegExp(escapeRegExp(company), "gi"), "[компанія]"),
+    text,
+  );
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

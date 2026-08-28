@@ -47,17 +47,23 @@ export function formatContacts(profile: {
   ].join("\n");
 }
 
+export function resolveCoverLetterGreeting(companyName: string | null): string {
+  const company = companyName?.trim();
+  if (!company) return "Вітаю!";
+  return `Вітаю, командо ${company}!`;
+}
+
 export function assembleCoverLetter(
   parts: {
-    greeting: string;
     whyJob: string;
     aboutAndCase: string;
     closing: string;
   },
   profile: { linkedin: string; email: string; telegram: string },
+  companyName?: string | null,
 ): string {
   return [
-    parts.greeting.trim(),
+    resolveCoverLetterGreeting(companyName ?? null),
     parts.whyJob.trim(),
     parts.aboutAndCase.trim(),
     parts.closing.trim(),

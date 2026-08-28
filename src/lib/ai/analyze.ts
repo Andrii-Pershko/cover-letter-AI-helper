@@ -64,7 +64,7 @@ export async function runAnalysis(
       ? letter.usedProjectTitle
       : profile.projects[0]?.title ?? letter.usedProjectTitle;
 
-    coverLetter = assembleCoverLetter(letter, profile);
+    coverLetter = assembleCoverLetter(letter, profile, analysis.companyName);
   }
 
   return prisma.analysis.create({
