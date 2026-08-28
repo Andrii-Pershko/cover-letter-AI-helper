@@ -1,9 +1,13 @@
+import { ApplyButton } from "@/components/analyses/apply-button";
 import { CopyButton } from "@/components/analyses/copy-button";
+import { buttonClassName } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { coverLetterProseLength } from "@/lib/cl-settings";
-import { formatContacts, recommendationLabel } from "@/lib/utils";
+import { formatContacts, recommendationLabel, stripUrl } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Analysis, AnalysisRequirement } from "@/generated/prisma/client";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 type Result = Analysis & { requirements: AnalysisRequirement[] };
 
@@ -41,6 +45,17 @@ export function ResultView({
             .filter(Boolean)
             .join(" · ") || "Вакансія"}
         </p>
+        {analysis.jobUrl ? (
+          <a
+            href={analysis.jobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex max-w-full items-center gap-1.5 text-sm text-accent transition-colors hover:text-accent-hover"
+          >
+            <ExternalLink className="size-3.5 shrink-0" aria-hidden />
+            <span className="truncate">{stripUrl(analysis.jobUrl)}</span>
+          </a>
+        ) : null}
         <p className="mt-3 text-5xl font-semibold tracking-tight text-ink">
           {analysis.matchMin}–{analysis.matchMax}%
         </p>
@@ -93,7 +108,7 @@ export function ResultView({
                 / {clCharLimit} символів
               </p>
             </div>
-            <CopyButton text={analysis.coverLetter} />
+            <CoverLetterActions analysis={analysis} />
           </div>
           <pre className="glass-row mt-4 whitespace-pre-wrap rounded-[16px] px-4 py-3 font-sans text-sm leading-7 text-ink">
             {analysis.coverLetter}
@@ -101,16 +116,36 @@ export function ResultView({
         </Card>
       ) : (
         <Card>
-          <h2 className="text-xl font-semibold tracking-tight text-ink">
-            Cover letter
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
-            Лист не генерується, якщо середній match нижчий за{" "}
-            {clMatchThreshold}% — щоб не відправляти слабку заявку з гарним
-            текстом.
-          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                Cover letter
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Лист не генерується, якщо середній match нижчий за{" "}
+                {clMatchThreshold}% — щоб не відправляти слабку заявку з гарним
+                текстом.
+              </p>
+            </div>
+            <CoverLetterActions analysis={analysis} />
+          </div>
         </Card>
       )}
+    </div>
+  );
+}
+
+function CoverLetterActions({ analysis }: { analysis: Result }) {
+  return (
+    <div className="flex flex-wrap gap-2 shrink-0">
+      {analysis.coverLetter ? <CopyButton text={analysis.coverLetter} /> : null}
+      <ApplyButton
+        analysisId={analysis.id}
+        applied={Boolean(analysis.pipelineStatus)}
+      />
+      <Link href="/" className={buttonClassName("primary")}>
+        Новий аналіз
+      </Link>
     </div>
   );
 }

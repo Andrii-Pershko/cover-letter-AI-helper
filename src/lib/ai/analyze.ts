@@ -24,7 +24,11 @@ type ProfilePayload = Profile & {
 const MATCH_TIMEOUT_MS = 90_000;
 const COVER_LETTER_TIMEOUT_MS = 45_000;
 
-export async function runAnalysis(profile: ProfilePayload, jobText: string) {
+export async function runAnalysis(
+  profile: ProfilePayload,
+  jobText: string,
+  extras: { jobUrl?: string | null } = {},
+) {
   console.info("[ai]", { step: "start", model: getModelId() });
 
   const analysis = await generateJson("match", analysisSchema, {
@@ -70,6 +74,7 @@ export async function runAnalysis(profile: ProfilePayload, jobText: string) {
       companyName: analysis.companyName,
       jobTitle: analysis.jobTitle,
       jobLevel: analysis.jobLevel,
+      jobUrl: extras.jobUrl ?? null,
       jobText,
       matchMin,
       matchMax,

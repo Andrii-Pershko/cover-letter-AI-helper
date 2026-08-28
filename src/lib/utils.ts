@@ -16,6 +16,25 @@ export function stripUrl(value: string): string {
   return value.trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
 }
 
+const MAX_JOB_URL_LENGTH = 2000;
+
+export function normalizeJobUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.length > MAX_JOB_URL_LENGTH) return null;
+  const withProtocol = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+  try {
+    const url = new URL(withProtocol);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (!url.hostname.includes(".")) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function formatContacts(profile: {
   linkedin: string;
   email: string;

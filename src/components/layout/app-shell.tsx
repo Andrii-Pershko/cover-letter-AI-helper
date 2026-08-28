@@ -5,6 +5,8 @@ import { logout } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
+  BarChart3,
+  Columns3,
   FileSearch,
   Layers,
   LogIn,
@@ -25,6 +27,8 @@ import {
 
 const nav = [
   { href: "/", label: "Аналіз", icon: FileSearch },
+  { href: "/monitoring", label: "Моніторинг", icon: Columns3 },
+  { href: "/stats", label: "Статистика", icon: BarChart3 },
   { href: "/profile", label: "Профіль", icon: UserRound },
   { href: "/projects", label: "Проєкти", icon: Layers },
   { href: "/examples", label: "Ідеальні CL", icon: Mail },
@@ -244,7 +248,7 @@ export function AppShell({
           </div>
         </div>
 
-        <aside className="hidden shrink-0 flex-col gap-6 border-white/25 px-5 py-7 lg:flex lg:w-60 lg:border-r">
+        <aside className="hidden shrink-0 flex-col gap-6 overflow-y-auto border-white/25 px-5 py-7 lg:flex lg:w-60 lg:border-r">
           <Link href={email ? "/" : "/login"} className="shrink-0 cursor-pointer px-1">
             <span className="block text-lg font-semibold tracking-tight text-ink">
               AI-CL

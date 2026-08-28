@@ -84,20 +84,27 @@ model Analysis {
   id               String                 @id @default(cuid())
   profileId        String
   profile          Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  createdAt        DateTime               @default(now())
-  companyName      String?
-  jobTitle         String?
-  jobLevel         String?
-  jobText          String                 @db.Text
-  matchMin         Int
-  matchMax         Int
-  recommendation   String
-  gaps             String[]
-  coverLetter      String?                @db.Text
-  usedProjectTitle String?
+  createdAt         DateTime               @default(now())
+  companyName       String?
+  jobTitle          String?
+  jobLevel          String?
+  jobUrl            String?
+  jobText           String                 @db.Text
+  matchMin          Int
+  matchMax          Int
+  recommendation    String
+  gaps              String[]
+  coverLetter       String?                @db.Text
+  usedProjectTitle  String?
+  appliedAt         DateTime?
+  pipelineStatus    String?
+  pipelineUpdatedAt DateTime?
   requirements     AnalysisRequirement[]
 
   @@index([profileId])
+  @@index([profileId, createdAt])
+  @@index([profileId, appliedAt])
+  @@index([profileId, pipelineStatus])
 }
 
 model AnalysisRequirement {
