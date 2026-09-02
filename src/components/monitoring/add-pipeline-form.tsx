@@ -3,6 +3,7 @@
 import { addManualApplication } from "@/app/actions/pipeline";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 
@@ -62,18 +63,41 @@ export function AddPipelineForm() {
             disabled={pending}
           />
         </Field>
-        <Button type="submit" disabled={pending} className="h-11 shrink-0">
-          {pending ? "Додаю…" : "Додати в подані"}
+        <Button
+          type="submit"
+          disabled={pending}
+          className="h-11 w-full shrink-0 sm:w-auto"
+        >
+          <span className="inline-grid justify-items-center">
+            <span
+              className={cn(
+                "col-start-1 row-start-1",
+                pending && "invisible",
+              )}
+            >
+              Додати в подані
+            </span>
+            <span
+              className={cn(
+                "col-start-1 row-start-1",
+                !pending && "invisible",
+              )}
+            >
+              Додаю…
+            </span>
+          </span>
         </Button>
       </form>
-      {error ? (
-        <p className="mt-3 text-sm text-match-red">{error}</p>
-      ) : (
-        <p className="mt-3 text-xs leading-5 text-muted">
-          Картка зʼявиться в колонці «Подався». Далі її можна перетягнути в інший
-          статус.
-        </p>
-      )}
+      <div className="mt-3 min-h-10">
+        {error ? (
+          <p className="text-sm text-match-red">{error}</p>
+        ) : (
+          <p className="text-xs leading-5 text-muted">
+            Картка зʼявиться в колонці «Подався». Далі її можна перетягнути в
+            інший статус.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
