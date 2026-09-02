@@ -6,6 +6,8 @@ import { getProfile } from "@/lib/profile";
 import { isPipelineStatus, type PipelineStatus } from "@/lib/pipeline";
 import { normalizeJobUrl } from "@/lib/utils";
 
+const MAX_COMPANY_NAME_LENGTH = 120;
+
 export type PipelineActionResult = { error?: string; ok?: boolean };
 
 async function ownedAnalysis(id: string) {
@@ -74,6 +76,50 @@ export async function saveAnalysisJobUrl(
   await prisma.analysis.update({
     where: { id: analysis.id },
     data: { jobUrl },
+  });
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function addManualApplication(
+  companyNameRaw: string,
+  jobUrlRaw: string,
+): Promise<PipelineActionResult> {
+  const profile = await getProfile();
+  const companyName = companyNameRaw.trim();
+  if (!companyName) {
+    return { error: "Вкажи назву компанії." };
+  }
+  if (companyName.length > MAX_COMPANY_NAME_LENGTH) {
+    return { error: "Назва компанії занадто довга." };
+  }
+
+  const trimmedUrl = jobUrlRaw.trim();
+  if (!trimmedUrl) {
+    return { error: "Додайте лінк на вакансію." };
+  }
+  const jobUrl = normalizeJobUrl(trimmedUrl);
+  if (!jobUrl) {
+    return { error: "Лінк на вакансію має бути коректним URL." };
+  }
+
+  const now = new Date();
+  await prisma.analysis.create({
+    data: {
+      profileId: profile.id,
+      companyName,
+      jobUrl,
+      jobText: "",
+      matchMin: 0,
+      matchMax: 0,
+      recommendation: "manual",
+      source: "manual",
+      gaps: [],
+      appliedAt: now,
+      pipelineStatus: "applied",
+      pipelineUpdatedAt: now,
+    },
   });
 
   revalidatePath("/", "layout");

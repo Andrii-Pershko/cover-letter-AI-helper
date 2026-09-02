@@ -1,13 +1,14 @@
 "use client";
 
 import { updatePipelineStatus } from "@/app/actions/pipeline";
+import { Input } from "@/components/ui/field";
 import {
   PIPELINE_COLUMNS,
   type PipelineCard,
   type PipelineStatus,
 } from "@/lib/pipeline";
 import { cn, stripUrl } from "@/lib/utils";
-import { ExternalLink, GripVertical } from "lucide-react";
+import { ExternalLink, GripVertical, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -46,6 +47,13 @@ function formatAppliedAt(value: string | null) {
   }).format(new Date(value));
 }
 
+function matchesCompanyQuery(card: PipelineCard, query: string) {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  const haystack = (card.companyName || card.jobTitle || "").toLowerCase();
+  return haystack.includes(needle);
+}
+
 const SCROLLABLE_COLUMNS = new Set<PipelineStatus>([
   "applied",
   "interview",
@@ -69,6 +77,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [overColumn, setOverColumn] = useState<PipelineStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const dragRef = useRef<DragState | null>(null);
   const overColumnRef = useRef<PipelineStatus | null>(null);
   const overridesRef = useRef(overrides);
@@ -95,6 +104,16 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
     }
     return map;
   }, [cards]);
+
+  const visibleGrouped = useMemo(() => {
+    if (!query.trim()) return grouped;
+    return Object.fromEntries(
+      PIPELINE_COLUMNS.map((column) => [
+        column.id,
+        grouped[column.id].filter((card) => matchesCompanyQuery(card, query)),
+      ]),
+    ) as Record<PipelineStatus, PipelineCard[]>;
+  }, [grouped, query]);
 
   useEffect(() => {
     function onPointerMove(event: PointerEvent) {
@@ -174,14 +193,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
     document.body.style.userSelect = "none";
   }
 
-  if (items.length === 0) {
-    return (
-      <p className="glass-card px-4 py-8 text-center text-sm leading-6 text-muted sm:px-6">
-        Поки немає поданих вакансій. Після аналізу натисни «Я подався на
-        вакансію» — картка зʼявиться тут.
-      </p>
-    );
-  }
+  const filtering = Boolean(query.trim());
 
   return (
     <div className="flex flex-col gap-3">
@@ -190,59 +202,86 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           {error}
         </p>
       ) : null}
-      <div className="-mx-1 overflow-x-auto p-1 pb-2">
-        <div className="flex min-w-[920px] gap-3 lg:min-w-0 lg:grid lg:grid-cols-5">
-          {PIPELINE_COLUMNS.map((column) => {
-            const columnCards = grouped[column.id];
-            const isOver = overColumn === column.id;
-            const isScrollable = SCROLLABLE_COLUMNS.has(column.id);
-            return (
-              <section
-                key={column.id}
-                data-column={column.id}
-                className={cn(
-                  "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200",
-                  isScrollable && "max-h-[600px] overflow-hidden",
-                  isOver &&
-                  "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
-                )}
-              >
-                <header className="pointer-events-none mb-3 flex shrink-0 items-baseline justify-between gap-2 px-1">
-                  <h2 className="text-sm font-semibold tracking-tight text-ink">
-                    {column.label}
-                  </h2>
-                  <span className="text-xs tabular-nums text-muted">
-                    {columnCards.length}
-                  </span>
-                </header>
-                <ul
+      {items.length > 0 ? (
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted"
+            aria-hidden
+          />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Пошук компанії"
+            aria-label="Пошук компанії"
+            className="pl-10"
+          />
+        </div>
+      ) : null}
+      {items.length === 0 ? (
+        <p className="glass-card px-4 py-8 text-center text-sm leading-6 text-muted sm:px-6">
+          Поки немає поданих вакансій. Додай компанію й лінк вище або після
+          аналізу натисни «Я подався на вакансію».
+        </p>
+      ) : (
+        <div className="-mx-4 overflow-x-auto px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:overflow-visible lg:px-0 lg:pb-4 lg:pt-2">
+          <div className="flex min-w-[920px] gap-3 lg:min-w-0 lg:grid lg:grid-cols-5">
+            {PIPELINE_COLUMNS.map((column) => {
+              const columnCards = visibleGrouped[column.id];
+              const columnTotal = grouped[column.id].length;
+              const isOver = overColumn === column.id;
+              const isScrollable = SCROLLABLE_COLUMNS.has(column.id);
+              return (
+                <section
+                  key={column.id}
+                  data-column={column.id}
                   className={cn(
-                    "flex min-h-0 flex-1 flex-col gap-2",
-                    isScrollable
-                      ? "glass-scroll pointer-events-auto overflow-y-auto pr-1"
-                      : "pointer-events-none",
+                    "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200",
+                    isScrollable && "max-h-[600px]",
+                    isOver &&
+                      "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
                   )}
                 >
-                  {columnCards.map((card) => (
-                    <li key={card.id} className="pointer-events-auto">
-                      <KanbanCard
-                        card={card}
-                        dragging={drag?.id === card.id}
-                        onDragStart={startDrag}
-                      />
-                    </li>
-                  ))}
-                  {columnCards.length === 0 ? (
-                    <li className="flex flex-1 items-center justify-center rounded-[16px] border border-dashed border-white/50 px-3 py-6 text-center text-xs leading-5 text-muted">
-                      Перетягни сюди
-                    </li>
-                  ) : null}
-                </ul>
-              </section>
-            );
-          })}
+                  <header className="pointer-events-none mb-3 flex shrink-0 items-baseline justify-between gap-2 px-1">
+                    <h2 className="text-sm font-semibold tracking-tight text-ink">
+                      {column.label}
+                    </h2>
+                    <span className="text-xs tabular-nums text-muted">
+                      {filtering && columnCards.length !== columnTotal
+                        ? `${columnCards.length}/${columnTotal}`
+                        : columnCards.length}
+                    </span>
+                  </header>
+                  <ul
+                    className={cn(
+                      "flex min-h-0 flex-1 flex-col gap-2",
+                      isScrollable
+                        ? "glass-scroll pointer-events-auto overflow-y-auto py-0.5 pr-1"
+                        : "pointer-events-none",
+                    )}
+                  >
+                    {columnCards.map((card) => (
+                      <li key={card.id} className="pointer-events-auto">
+                        <KanbanCard
+                          card={card}
+                          dragging={drag?.id === card.id}
+                          onDragStart={startDrag}
+                        />
+                      </li>
+                    ))}
+                    {columnCards.length === 0 ? (
+                      <li className="flex flex-1 items-center justify-center rounded-[16px] border border-dashed border-white/50 px-3 py-6 text-center text-xs leading-5 text-muted">
+                        {filtering && columnTotal > 0
+                          ? "Немає збігів"
+                          : "Перетягни сюди"}
+                      </li>
+                    ) : null}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
       {drag ? (
         <div
           aria-hidden
@@ -297,20 +336,39 @@ function KanbanCard({
           <GripVertical className="size-4" aria-hidden />
         </button>
         <div className="min-w-0 flex-1">
-          <Link
-            href={`/analyses/${card.id}`}
-            className="block truncate text-sm font-medium text-ink hover:text-accent"
-          >
-            {cardTitle(card)}
-          </Link>
+          {card.source === "manual" ? (
+            card.jobUrl ? (
+              <a
+                href={card.jobUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block truncate text-sm font-medium text-ink hover:text-accent"
+              >
+                {cardTitle(card)}
+              </a>
+            ) : (
+              <p className="truncate text-sm font-medium text-ink">
+                {cardTitle(card)}
+              </p>
+            )
+          ) : (
+            <Link
+              href={`/analyses/${card.id}`}
+              className="block truncate text-sm font-medium text-ink hover:text-accent"
+            >
+              {cardTitle(card)}
+            </Link>
+          )}
           {cardSubtitle(card) ? (
             <p className="mt-0.5 truncate text-xs text-muted">
               {cardSubtitle(card)}
             </p>
           ) : null}
-          <p className="mt-1.5 text-sm font-semibold tabular-nums text-ink">
-            {card.matchMin}–{card.matchMax}%
-          </p>
+          {card.source === "analysis" ? (
+            <p className="mt-1.5 text-sm font-semibold tabular-nums text-ink">
+              {card.matchMin}–{card.matchMax}%
+            </p>
+          ) : null}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
             {applied ? <span>з {applied}</span> : null}
             {card.jobUrl ? (

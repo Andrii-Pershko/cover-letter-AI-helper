@@ -8,13 +8,14 @@ export async function getAnalysisHistoryPage(
   profileId: string,
   requestedPage: number,
 ): Promise<AnalysisHistoryPage> {
+  const where = { profileId, source: { not: "manual" } };
   const total = await prisma.analysis.count({
-    where: { profileId },
+    where,
   });
   const totalPages = Math.max(1, Math.ceil(total / HISTORY_PAGE_SIZE));
   const page = Math.min(Math.max(1, requestedPage), totalPages);
   const items = await prisma.analysis.findMany({
-    where: { profileId },
+    where,
     orderBy: { createdAt: "desc" },
     skip: (page - 1) * HISTORY_PAGE_SIZE,
     take: HISTORY_PAGE_SIZE,

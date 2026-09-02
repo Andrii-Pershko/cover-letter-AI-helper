@@ -7,6 +7,7 @@ export async function getProfile() {
     projects: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
     exampleLetters: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
     analyses: {
+      where: { source: { not: "manual" } },
       orderBy: { createdAt: "desc" },
       take: 12,
       select: {

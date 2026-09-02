@@ -37,7 +37,7 @@ export default async function StatsPage({
   const period = parseStatsPeriod(periodRaw);
   const events = await prisma.analysis.findMany({
     where: { profileId: profile.id },
-    select: { createdAt: true, appliedAt: true },
+    select: { createdAt: true, appliedAt: true, source: true },
   });
   const stats = buildStatsView(period, events);
   const requestedPage = parseStatsPage(pageRaw);

@@ -131,7 +131,11 @@ function formatLabel(key: string, period: StatsPeriod): string {
 
 export function buildStatsView(
   period: StatsPeriod,
-  events: Array<{ createdAt: Date; appliedAt: Date | null }>,
+  events: Array<{
+    createdAt: Date;
+    appliedAt: Date | null;
+    source?: string | null;
+  }>,
   now = new Date(),
 ): StatsView {
   const todayKey = dateKeyInZone(now);
@@ -139,10 +143,12 @@ export function buildStatsView(
   const buckets = new Map<string, { analyses: number; applications: number }>();
 
   for (const event of events) {
-    const createdKey = bucketKey(dateKeyInZone(event.createdAt), period);
-    const created = buckets.get(createdKey) ?? { analyses: 0, applications: 0 };
-    created.analyses += 1;
-    buckets.set(createdKey, created);
+    if (event.source !== "manual") {
+      const createdKey = bucketKey(dateKeyInZone(event.createdAt), period);
+      const created = buckets.get(createdKey) ?? { analyses: 0, applications: 0 };
+      created.analyses += 1;
+      buckets.set(createdKey, created);
+    }
 
     if (event.appliedAt) {
       const appliedKey = bucketKey(dateKeyInZone(event.appliedAt), period);
@@ -177,7 +183,7 @@ export function buildStatsView(
     rows,
     current,
     totals: {
-      analyses: events.length,
+      analyses: events.filter((event) => event.source !== "manual").length,
       applications: events.filter((event) => event.appliedAt).length,
     },
   };

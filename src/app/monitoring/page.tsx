@@ -1,7 +1,12 @@
+import { AddPipelineForm } from "@/components/monitoring/add-pipeline-form";
 import { KanbanBoard } from "@/components/monitoring/kanban-board";
 import { PageHeader } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
-import { isPipelineStatus, type PipelineCard } from "@/lib/pipeline";
+import {
+  isPipelineSource,
+  isPipelineStatus,
+  type PipelineCard,
+} from "@/lib/pipeline";
 import { getProfile } from "@/lib/profile";
 
 export default async function MonitoringPage() {
@@ -25,6 +30,7 @@ export default async function MonitoringPage() {
       matchMax: true,
       pipelineStatus: true,
       appliedAt: true,
+      source: true,
     },
   });
 
@@ -43,6 +49,7 @@ export default async function MonitoringPage() {
         matchMax: row.matchMax,
         pipelineStatus: row.pipelineStatus,
         appliedAt: row.appliedAt?.toISOString() ?? null,
+        source: isPipelineSource(row.source) ? row.source : "analysis",
       },
     ];
   });
@@ -51,9 +58,12 @@ export default async function MonitoringPage() {
     <>
       <PageHeader
         title="Моніторинг"
-        description="Вакансії, на які ти вже відгукнувся. Перетягни картку між колонками, коли зміниться статус."
+        description="Вакансії, на які ти вже відгукнувся. Додай компанію з лінком або перетягни картку, коли зміниться статус."
       />
-      <KanbanBoard items={items} />
+      <div className="flex flex-col gap-4">
+        <AddPipelineForm />
+        <KanbanBoard items={items} />
+      </div>
     </>
   );
 }

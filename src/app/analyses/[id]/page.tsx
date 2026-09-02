@@ -18,7 +18,13 @@ export default async function AnalysisPage({
     include: { requirements: { orderBy: { sortOrder: "asc" } } },
   });
 
-  if (!analysis || analysis.profileId !== profile.id) notFound();
+  if (
+    !analysis ||
+    analysis.profileId !== profile.id ||
+    analysis.source === "manual"
+  ) {
+    notFound();
+  }
 
   return (
     <>

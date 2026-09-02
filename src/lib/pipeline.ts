@@ -23,6 +23,14 @@ export function isPipelineStatus(value: string): value is PipelineStatus {
   return PIPELINE_STATUSES.includes(value as PipelineStatus);
 }
 
+export const PIPELINE_SOURCES = ["analysis", "manual"] as const;
+
+export type PipelineSource = (typeof PIPELINE_SOURCES)[number];
+
+export function isPipelineSource(value: string): value is PipelineSource {
+  return PIPELINE_SOURCES.includes(value as PipelineSource);
+}
+
 export type PipelineCard = {
   id: string;
   companyName: string | null;
@@ -33,4 +41,5 @@ export type PipelineCard = {
   matchMax: number;
   pipelineStatus: PipelineStatus;
   appliedAt: string | null;
+  source: PipelineSource;
 };

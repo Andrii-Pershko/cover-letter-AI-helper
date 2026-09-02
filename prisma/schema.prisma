@@ -99,6 +99,7 @@ model Analysis {
   appliedAt         DateTime?
   pipelineStatus    String?
   pipelineUpdatedAt DateTime?
+  source            String                 @default("analysis")
   requirements     AnalysisRequirement[]
 
   @@index([profileId])
