@@ -1,6 +1,6 @@
 "use client";
 
-import { updatePipelineStatus } from "@/app/actions/pipeline";
+import { removeFromPipeline, updatePipelineStatus } from "@/app/actions/pipeline";
 import { Input } from "@/components/ui/field";
 import {
   PIPELINE_COLUMNS,
@@ -8,7 +8,7 @@ import {
   type PipelineStatus,
 } from "@/lib/pipeline";
 import { cn, stripUrl } from "@/lib/utils";
-import { ExternalLink, GripVertical, Search } from "lucide-react";
+import { ExternalLink, GripVertical, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -78,6 +78,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
   const [overColumn, setOverColumn] = useState<PipelineStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [hiddenIds, setHiddenIds] = useState<Record<string, true>>({});
   const dragRef = useRef<DragState | null>(null);
   const overColumnRef = useRef<PipelineStatus | null>(null);
   const overridesRef = useRef(overrides);
@@ -88,11 +89,13 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
 
   const cards = useMemo(
     () =>
-      items.map((card) => ({
-        ...card,
-        pipelineStatus: overrides[card.id] ?? card.pipelineStatus,
-      })),
-    [items, overrides],
+      items
+        .filter((card) => !hiddenIds[card.id])
+        .map((card) => ({
+          ...card,
+          pipelineStatus: overrides[card.id] ?? card.pipelineStatus,
+        })),
+    [items, overrides, hiddenIds],
   );
 
   const grouped = useMemo(() => {
@@ -193,7 +196,31 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
     document.body.style.userSelect = "none";
   }
 
+  async function handleDelete(card: PipelineCard) {
+    const confirmed = window.confirm(
+      card.source === "manual"
+        ? "Видалити цю вакансію з моніторингу?"
+        : "Прибрати з моніторингу? Результат аналізу залишиться в історії.",
+    );
+    if (!confirmed) return;
+
+    setHiddenIds((current) => ({ ...current, [card.id]: true }));
+    setError(null);
+    const result = await removeFromPipeline(card.id);
+    if (result.error) {
+      setHiddenIds((current) => {
+        const next = { ...current };
+        delete next[card.id];
+        return next;
+      });
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
   const filtering = Boolean(query.trim());
+  const visibleCount = cards.length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -202,7 +229,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           {error}
         </p>
       ) : null}
-      {items.length > 0 ? (
+      {visibleCount > 0 ? (
         <div className="relative">
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted"
@@ -217,7 +244,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           />
         </div>
       ) : null}
-      {items.length === 0 ? (
+      {visibleCount === 0 ? (
         <p className="glass-card px-4 py-8 text-center text-sm leading-6 text-muted sm:px-6">
           Поки немає поданих вакансій. Додай компанію й лінк вище або після
           аналізу натисни «Я подався на вакансію».
@@ -265,6 +292,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
                           card={card}
                           dragging={drag?.id === card.id}
                           onDragStart={startDrag}
+                          onDelete={handleDelete}
                         />
                       </li>
                     ))}
@@ -308,6 +336,7 @@ function KanbanCard({
   card,
   dragging,
   onDragStart,
+  onDelete,
 }: {
   card: PipelineCard;
   dragging: boolean;
@@ -315,6 +344,7 @@ function KanbanCard({
     event: ReactPointerEvent<HTMLButtonElement>,
     card: PipelineCard,
   ) => void;
+  onDelete: (card: PipelineCard) => void;
 }) {
   const applied = formatAppliedAt(card.appliedAt);
 
@@ -384,6 +414,14 @@ function KanbanCard({
             ) : null}
           </div>
         </div>
+        <button
+          type="button"
+          aria-label="Видалити вакансію"
+          onClick={() => onDelete(card)}
+          className="mt-0.5 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(220_120_110_/_0.14)] hover:text-match-red"
+        >
+          <Trash2 className="size-3.5" aria-hidden />
+        </button>
       </div>
     </article>
   );

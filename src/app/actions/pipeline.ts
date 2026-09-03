@@ -18,6 +18,7 @@ async function ownedAnalysis(id: string) {
       id: true,
       appliedAt: true,
       pipelineStatus: true,
+      source: true,
     },
   });
 }
@@ -149,6 +150,32 @@ export async function updatePipelineStatus(
       appliedAt: analysis.appliedAt ?? now,
     },
   });
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function removeFromPipeline(
+  analysisId: string,
+): Promise<PipelineActionResult> {
+  const analysis = await ownedAnalysis(analysisId);
+  if (!analysis) return { error: "Вакансію не знайдено" };
+  if (!analysis.pipelineStatus) {
+    return { error: "Цієї вакансії немає в моніторингу" };
+  }
+
+  if (analysis.source === "manual") {
+    await prisma.analysis.delete({ where: { id: analysis.id } });
+  } else {
+    await prisma.analysis.update({
+      where: { id: analysis.id },
+      data: {
+        pipelineStatus: null,
+        appliedAt: null,
+        pipelineUpdatedAt: null,
+      },
+    });
+  }
 
   revalidatePath("/", "layout");
   return { ok: true };
