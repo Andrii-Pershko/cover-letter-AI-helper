@@ -97,7 +97,7 @@ model Analysis {
   coverLetter       String?                @db.Text
   usedProjectTitle  String?
   appliedAt         DateTime?
-  pipelineStatus    String?
+  pipelineStatus    PipelineStatus?
   pipelineUpdatedAt DateTime?
   source            String                 @default("analysis")
   requirements     AnalysisRequirement[]
@@ -121,4 +121,13 @@ model AnalysisRequirement {
   sortOrder     Int      @default(0)
 
   @@index([analysisId])
+}
+
+enum PipelineStatus {
+  applied
+  flow
+  interview
+  test
+  rejected
+  offer
 }

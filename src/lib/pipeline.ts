@@ -1,5 +1,6 @@
 export const PIPELINE_STATUSES = [
   "applied",
+  "flow",
   "interview",
   "test",
   "rejected",
@@ -13,6 +14,7 @@ export const PIPELINE_COLUMNS: Array<{
   label: string;
 }> = [
   { id: "applied", label: "Подався" },
+  { id: "flow", label: "Флоу" },
   { id: "interview", label: "Співбесіда" },
   { id: "test", label: "Тестове" },
   { id: "rejected", label: "Відхилили" },

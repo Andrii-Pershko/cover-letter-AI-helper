@@ -56,6 +56,7 @@ function matchesCompanyQuery(card: PipelineCard, query: string) {
 
 const SCROLLABLE_COLUMNS = new Set<PipelineStatus>([
   "applied",
+  "flow",
   "interview",
   "test",
 ]);
@@ -250,8 +251,8 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           аналізу натисни «Я подався на вакансію».
         </p>
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:overflow-visible lg:px-0 lg:pb-4 lg:pt-2">
-          <div className="flex min-w-[920px] gap-3 lg:min-w-0 lg:grid lg:grid-cols-5">
+        <div className="-mx-4 overflow-x-auto px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 xl:mx-0 xl:overflow-visible xl:px-0 xl:pb-4 xl:pt-2">
+          <div className="flex min-w-[1116px] gap-3 xl:min-w-0 xl:grid xl:grid-cols-6">
             {PIPELINE_COLUMNS.map((column) => {
               const columnCards = visibleGrouped[column.id];
               const columnTotal = grouped[column.id].length;
@@ -262,7 +263,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
                   key={column.id}
                   data-column={column.id}
                   className={cn(
-                    "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200",
+                    "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200 xl:min-w-0",
                     isScrollable && "max-h-[600px]",
                     isOver &&
                       "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
