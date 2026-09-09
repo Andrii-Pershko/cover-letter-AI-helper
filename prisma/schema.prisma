@@ -100,12 +100,14 @@ model Analysis {
   pipelineStatus    PipelineStatus?
   pipelineUpdatedAt DateTime?
   source            String                 @default("analysis")
+  archivedAt        DateTime?
   requirements     AnalysisRequirement[]
 
   @@index([profileId])
   @@index([profileId, createdAt])
   @@index([profileId, appliedAt])
   @@index([profileId, pipelineStatus])
+  @@index([profileId, archivedAt])
 }
 
 model AnalysisRequirement {

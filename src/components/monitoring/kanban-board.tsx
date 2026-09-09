@@ -99,7 +99,13 @@ function autoScrollX(scroller: HTMLElement, clientX: number) {
   }
 }
 
-export function KanbanBoard({ items }: { items: PipelineCard[] }) {
+export function KanbanBoard({
+  items,
+  showArchive = false,
+}: {
+  items: PipelineCard[];
+  showArchive?: boolean;
+}) {
   const router = useRouter();
   const [overrides, setOverrides] = useState<Partial<Record<string, PipelineStatus>>>(
     {},
@@ -303,8 +309,9 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
       ) : null}
       {visibleCount === 0 ? (
         <p className="glass-card px-4 py-8 text-center text-sm leading-6 text-muted sm:px-6">
-          Поки немає поданих вакансій. Додай компанію й лінк вище або після
-          аналізу натисни «Я подався на вакансію».
+          {showArchive
+            ? "В архіві ще немає вакансій. Додай компанію й лінк вище або після аналізу натисни «Я подався на вакансію»."
+            : "Поки немає поданих вакансій у цьому відрізку. Додай компанію й лінк вище або після аналізу натисни «Я подався на вакансію»."}
         </p>
       ) : (
         <div
@@ -429,6 +436,7 @@ function KanbanCard({
       className={cn(
         "glass-row rounded-[16px] p-3 transition-opacity duration-150",
         dragging && "invisible",
+        card.archived && "opacity-80",
       )}
     >
       <div className="flex items-start gap-2">
@@ -467,6 +475,11 @@ function KanbanCard({
           {cardSubtitle(card) ? (
             <p className="mt-0.5 truncate text-xs text-muted">
               {cardSubtitle(card)}
+            </p>
+          ) : null}
+          {card.archived ? (
+            <p className="mt-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+              Архів
             </p>
           ) : null}
           {card.source === "analysis" ? (

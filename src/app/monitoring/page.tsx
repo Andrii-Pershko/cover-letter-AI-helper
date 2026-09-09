@@ -1,6 +1,11 @@
 import { AddPipelineForm } from "@/components/monitoring/add-pipeline-form";
 import { KanbanBoard } from "@/components/monitoring/kanban-board";
+import {
+  ArchiveToggle,
+  StartNewMonitoringButton,
+} from "@/components/monitoring/period-controls";
 import { PageHeader } from "@/components/ui/card";
+import { hrefWithArchive, parseArchiveFlag } from "@/lib/archive";
 import { prisma } from "@/lib/db";
 import {
   isPipelineSource,
@@ -9,30 +14,43 @@ import {
 } from "@/lib/pipeline";
 import { getProfile } from "@/lib/profile";
 
-export default async function MonitoringPage() {
+export default async function MonitoringPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ archive?: string }>;
+}) {
   const profile = await getProfile();
-  const rows = await prisma.analysis.findMany({
-    where: {
-      profileId: profile.id,
-      pipelineStatus: { not: null },
-    },
-    orderBy: [
-      { pipelineUpdatedAt: { sort: "desc", nulls: "last" } },
-      { appliedAt: { sort: "desc", nulls: "last" } },
-    ],
-    select: {
-      id: true,
-      companyName: true,
-      jobTitle: true,
-      jobLevel: true,
-      jobUrl: true,
-      matchMin: true,
-      matchMax: true,
-      pipelineStatus: true,
-      appliedAt: true,
-      source: true,
-    },
-  });
+  const { archive: archiveRaw } = await searchParams;
+  const showArchive = parseArchiveFlag(archiveRaw);
+  const [rows, currentCount] = await Promise.all([
+    prisma.analysis.findMany({
+      where: {
+        profileId: profile.id,
+        pipelineStatus: { not: null },
+        ...(showArchive ? {} : { archivedAt: null }),
+      },
+      orderBy: [
+        { pipelineUpdatedAt: { sort: "desc", nulls: "last" } },
+        { appliedAt: { sort: "desc", nulls: "last" } },
+      ],
+      select: {
+        id: true,
+        companyName: true,
+        jobTitle: true,
+        jobLevel: true,
+        jobUrl: true,
+        matchMin: true,
+        matchMax: true,
+        pipelineStatus: true,
+        appliedAt: true,
+        source: true,
+        archivedAt: true,
+      },
+    }),
+    prisma.analysis.count({
+      where: { profileId: profile.id, archivedAt: null },
+    }),
+  ]);
 
   const items: PipelineCard[] = rows.flatMap((row) => {
     if (!row.pipelineStatus || !isPipelineStatus(row.pipelineStatus)) {
@@ -50,6 +68,7 @@ export default async function MonitoringPage() {
         pipelineStatus: row.pipelineStatus,
         appliedAt: row.appliedAt?.toISOString() ?? null,
         source: isPipelineSource(row.source) ? row.source : "analysis",
+        archived: Boolean(row.archivedAt),
       },
     ];
   });
@@ -58,11 +77,21 @@ export default async function MonitoringPage() {
     <>
       <PageHeader
         title="Моніторинг"
-        description="Вакансії, на які ти вже відгукнувся. Додай компанію з лінком або перетягни картку, коли зміниться статус."
+        description="Вакансії, на які ти вже відгукнувся. Новий моніторинг архівує поточну дошку й починає новий відрізок статистики."
+        action={
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+            <ArchiveToggle
+              checked={showArchive}
+              hrefOn={hrefWithArchive("/monitoring", true)}
+              hrefOff={hrefWithArchive("/monitoring", false)}
+            />
+            <StartNewMonitoringButton disabled={currentCount === 0} />
+          </div>
+        }
       />
       <div className="flex flex-col gap-4">
         <AddPipelineForm />
-        <KanbanBoard items={items} />
+        <KanbanBoard items={items} showArchive={showArchive} />
       </div>
     </>
   );

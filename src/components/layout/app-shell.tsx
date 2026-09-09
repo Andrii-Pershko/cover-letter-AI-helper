@@ -56,6 +56,7 @@ export function AppShell({
   const items = isAuthPage ? authNav : nav;
   const navRef = useRef<HTMLElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState(pathname);
   const [pill, setPill] = useState<{
     x: number;
     y: number;
@@ -63,6 +64,11 @@ export function AppShell({
     h: number;
   } | null>(null);
   const [animatePill, setAnimatePill] = useState(false);
+
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    setMenuOpen(false);
+  }
 
   const updatePill = useCallback(() => {
     const navEl = navRef.current;
@@ -99,10 +105,6 @@ export function AppShell({
   }, [updatePill]);
 
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!menuOpen) return;
 
     function onKeyDown(event: KeyboardEvent) {
@@ -116,7 +118,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh flex-col p-2.5 sm:p-4 lg:p-6">
       <div
-        className="glass-shell relative mx-auto flex w-full max-w-[1280px] flex-1 flex-col overflow-hidden lg:flex-row"
+        className="glass-shell relative mx-auto flex w-full max-w-[1920px] flex-1 flex-col overflow-hidden lg:flex-row"
       >
         <header className="relative z-50 flex items-center justify-between border-b border-white/25 px-4 py-3 lg:hidden">
           <Link href={email ? "/" : "/login"} className="min-w-0 cursor-pointer px-0.5">
@@ -142,27 +144,27 @@ export function AppShell({
               onClick={() => setMenuOpen((open) => !open)}
               className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-2xl text-ink transition-colors duration-200 hover:bg-white/35"
             >
-            <span className="relative block h-3.5 w-5">
-              <span
-                className={cn(
-                  "absolute left-0 top-0 h-0.5 w-full rounded-full bg-ink transition-all duration-200",
-                  menuOpen && "top-[6px] rotate-45",
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute left-0 top-[6px] h-0.5 w-full rounded-full bg-ink transition-all duration-200",
-                  menuOpen && "opacity-0",
-                )}
-              />
-              <span
-                className={cn(
-                  "absolute left-0 top-[12px] h-0.5 w-full rounded-full bg-ink transition-all duration-200",
-                  menuOpen && "top-[6px] -rotate-45",
-                )}
-              />
-            </span>
-          </button>
+              <span className="relative block h-3.5 w-5">
+                <span
+                  className={cn(
+                    "absolute left-0 top-0 h-0.5 w-full rounded-full bg-ink transition-all duration-200",
+                    menuOpen && "top-[6px] rotate-45",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute left-0 top-[6px] h-0.5 w-full rounded-full bg-ink transition-all duration-200",
+                    menuOpen && "opacity-0",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute left-0 top-[12px] h-0.5 w-full rounded-full bg-ink transition-all duration-200",
+                    menuOpen && "top-[6px] -rotate-45",
+                  )}
+                />
+              </span>
+            </button>
           </div>
         </header>
 

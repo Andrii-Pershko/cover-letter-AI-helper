@@ -44,4 +44,5 @@ export type PipelineCard = {
   pipelineStatus: PipelineStatus;
   appliedAt: string | null;
   source: PipelineSource;
+  archived: boolean;
 };

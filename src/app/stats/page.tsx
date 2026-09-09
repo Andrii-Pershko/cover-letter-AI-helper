@@ -1,5 +1,7 @@
+import { ArchiveToggle } from "@/components/monitoring/period-controls";
 import { StatsTablePagination } from "@/components/stats/table-pagination";
 import { Card, PageHeader } from "@/components/ui/card";
+import { hrefWithArchive, parseArchiveFlag } from "@/lib/archive";
 import { prisma } from "@/lib/db";
 import { getProfile } from "@/lib/profile";
 import {
@@ -19,31 +21,38 @@ const PERIODS: Array<{ id: StatsPeriod; label: string }> = [
   { id: "month", label: "Місяць" },
 ];
 
-function statsHref(period: StatsPeriod, page = 1) {
-  const params = new URLSearchParams();
-  if (period !== "day") params.set("period", period);
-  if (page > 1) params.set("page", String(page));
-  const query = params.toString();
-  return query ? `/stats?${query}` : "/stats";
+function statsHref(period: StatsPeriod, page = 1, showArchive = false) {
+  return hrefWithArchive("/stats", showArchive, {
+    period: period === "day" ? undefined : period,
+    page: page > 1 ? String(page) : undefined,
+  });
 }
 
 export default async function StatsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; page?: string }>;
+  searchParams: Promise<{ period?: string; page?: string; archive?: string }>;
 }) {
   const profile = await getProfile();
-  const { period: periodRaw, page: pageRaw } = await searchParams;
+  const {
+    period: periodRaw,
+    page: pageRaw,
+    archive: archiveRaw,
+  } = await searchParams;
   const period = parseStatsPeriod(periodRaw);
+  const showArchive = parseArchiveFlag(archiveRaw);
   const events = await prisma.analysis.findMany({
-    where: { profileId: profile.id },
+    where: {
+      profileId: profile.id,
+      ...(showArchive ? {} : { archivedAt: null }),
+    },
     select: { createdAt: true, appliedAt: true, source: true },
   });
   const stats = buildStatsView(period, events);
   const requestedPage = parseStatsPage(pageRaw);
   const table = paginateStatsRows(stats.rows, requestedPage);
   if (requestedPage !== table.page) {
-    redirect(statsHref(period, table.page));
+    redirect(statsHref(period, table.page, showArchive));
   }
 
   const currentLabel =
@@ -53,7 +62,18 @@ export default async function StatsPage({
     <>
       <PageHeader
         title="Статистика"
-        description="Скільки аналізів зроблено і скільки заявок подано. Дати — за київським часом."
+        description={
+          showArchive
+            ? "Усі відрізки моніторингу. Дати — за київським часом."
+            : "Поточний відрізок моніторингу. Дати — за київським часом."
+        }
+        action={
+          <ArchiveToggle
+            checked={showArchive}
+            hrefOn={statsHref(period, 1, true)}
+            hrefOff={statsHref(period, 1, false)}
+          />
+        }
       />
       <div className="flex flex-col gap-6">
         <div
@@ -63,7 +83,7 @@ export default async function StatsPage({
         >
           {PERIODS.map((item) => {
             const active = item.id === period;
-            const href = statsHref(item.id);
+            const href = statsHref(item.id, 1, showArchive);
             return (
               <Link
                 key={item.id}
@@ -102,7 +122,7 @@ export default async function StatsPage({
           </Card>
           <Card>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
-              Усього
+              {showArchive ? "Усього в архіві й зараз" : "Усього за відрізок"}
             </p>
             <p className="mt-3 text-4xl font-semibold tracking-tight text-ink">
               {stats.totals.analyses}
@@ -148,7 +168,7 @@ export default async function StatsPage({
           <StatsTablePagination
             page={table.page}
             totalPages={table.totalPages}
-            hrefForPage={(page) => statsHref(period, page)}
+            hrefForPage={(page) => statsHref(period, page, showArchive)}
           />
         </Card>
       </div>

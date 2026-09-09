@@ -180,3 +180,19 @@ export async function removeFromPipeline(
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+export async function startNewMonitoring(): Promise<PipelineActionResult> {
+  const profile = await getProfile();
+  const now = new Date();
+  const result = await prisma.analysis.updateMany({
+    where: { profileId: profile.id, archivedAt: null },
+    data: { archivedAt: now },
+  });
+
+  if (result.count === 0) {
+    return { error: "Поточний відрізок уже порожній." };
+  }
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
