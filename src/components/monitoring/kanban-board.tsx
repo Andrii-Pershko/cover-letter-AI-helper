@@ -61,6 +61,10 @@ const SCROLLABLE_COLUMNS = new Set<PipelineStatus>([
   "test",
 ]);
 
+const COLUMN_MIN_PX = 220;
+const EDGE_ZONE_PX = 88;
+const MAX_EDGE_SCROLL_PX = 24;
+
 function columnFromPoint(x: number, y: number): PipelineStatus | null {
   const target = document
     .elementsFromPoint(x, y)
@@ -70,12 +74,37 @@ function columnFromPoint(x: number, y: number): PipelineStatus | null {
     : null;
 }
 
+function autoScrollX(scroller: HTMLElement, clientX: number) {
+  const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+  if (maxScroll <= 0) return;
+
+  const rect = scroller.getBoundingClientRect();
+  const leftDist = clientX - rect.left;
+  const rightDist = rect.right - clientX;
+  let delta = 0;
+
+  if (leftDist < EDGE_ZONE_PX) {
+    const intensity = 1 - Math.max(0, leftDist) / EDGE_ZONE_PX;
+    delta = -Math.ceil(MAX_EDGE_SCROLL_PX * intensity);
+  } else if (rightDist < EDGE_ZONE_PX) {
+    const intensity = 1 - Math.max(0, rightDist) / EDGE_ZONE_PX;
+    delta = Math.ceil(MAX_EDGE_SCROLL_PX * intensity);
+  }
+
+  if (!delta) return;
+  const next = Math.max(0, Math.min(maxScroll, scroller.scrollLeft + delta));
+  if (next !== scroller.scrollLeft) {
+    scroller.scrollLeft = next;
+  }
+}
+
 export function KanbanBoard({ items }: { items: PipelineCard[] }) {
   const router = useRouter();
   const [overrides, setOverrides] = useState<Partial<Record<string, PipelineStatus>>>(
     {},
   );
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [overColumn, setOverColumn] = useState<PipelineStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -83,6 +112,8 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
   const dragRef = useRef<DragState | null>(null);
   const overColumnRef = useRef<PipelineStatus | null>(null);
   const overridesRef = useRef(overrides);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const pointerRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     overridesRef.current = overrides;
@@ -123,6 +154,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
     function onPointerMove(event: PointerEvent) {
       const current = dragRef.current;
       if (!current) return;
+      pointerRef.current = { x: event.clientX, y: event.clientY };
       const next = {
         ...current,
         x: event.clientX - current.offsetX,
@@ -130,9 +162,6 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
       };
       dragRef.current = next;
       setDrag(next);
-      const column = columnFromPoint(event.clientX, event.clientY);
-      overColumnRef.current = column;
-      setOverColumn(column);
     }
 
     async function finish() {
@@ -141,7 +170,9 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
       if (!current) return;
       dragRef.current = null;
       overColumnRef.current = null;
+      pointerRef.current = null;
       setDrag(null);
+      setDragging(false);
       setOverColumn(null);
       document.body.style.removeProperty("user-select");
 
@@ -172,6 +203,28 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
     };
   }, [router]);
 
+  useEffect(() => {
+    if (!dragging) return;
+
+    let frame = 0;
+    function tick() {
+      const point = pointerRef.current;
+      const scroller = scrollerRef.current;
+      if (point && scroller) {
+        autoScrollX(scroller, point.x);
+        const column = columnFromPoint(point.x, point.y);
+        if (column !== overColumnRef.current) {
+          overColumnRef.current = column;
+          setOverColumn(column);
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    }
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [dragging]);
+
   function startDrag(
     event: ReactPointerEvent<HTMLButtonElement>,
     card: PipelineCard,
@@ -191,8 +244,10 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
       subtitle: cardSubtitle(card),
     };
     dragRef.current = next;
+    pointerRef.current = { x: event.clientX, y: event.clientY };
     overColumnRef.current = card.pipelineStatus;
     setDrag(next);
+    setDragging(true);
     setOverColumn(card.pipelineStatus);
     document.body.style.userSelect = "none";
   }
@@ -251,8 +306,19 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           аналізу натисни «Я подався на вакансію».
         </p>
       ) : (
-        <div className="-mx-4 overflow-x-auto px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 xl:mx-0 xl:overflow-visible xl:px-0 xl:pb-4 xl:pt-2">
-          <div className="flex min-w-[1116px] gap-3 xl:min-w-0 xl:grid xl:grid-cols-6">
+        <div
+          ref={scrollerRef}
+          className={cn(
+            "-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:pb-4 lg:pt-2",
+            dragging && "touch-none",
+          )}
+        >
+          <div
+            className="grid min-w-full gap-3"
+            style={{
+              gridTemplateColumns: `repeat(${PIPELINE_COLUMNS.length}, minmax(${COLUMN_MIN_PX}px, 1fr))`,
+            }}
+          >
             {PIPELINE_COLUMNS.map((column) => {
               const columnCards = visibleGrouped[column.id];
               const columnTotal = grouped[column.id].length;
@@ -263,7 +329,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
                   key={column.id}
                   data-column={column.id}
                   className={cn(
-                    "glass-card flex min-h-[28rem] min-w-[176px] flex-1 flex-col p-3 transition-[box-shadow,background-color] duration-200 xl:min-w-0",
+                    "glass-card flex min-h-[28rem] min-w-[220px] flex-col p-3 transition-[box-shadow,background-color] duration-200",
                     isScrollable && "max-h-[600px]",
                     isOver &&
                       "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
