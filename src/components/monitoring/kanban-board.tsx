@@ -18,6 +18,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
 type DragState = {
   id: string;
@@ -309,12 +310,12 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
         <div
           ref={scrollerRef}
           className={cn(
-            "-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:pb-4 lg:pt-2",
+            "-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-6 pt-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-2 lg:pb-4 lg:pt-2",
             dragging && "touch-none",
           )}
         >
           <div
-            className="grid min-w-full gap-3"
+            className="grid min-w-full gap-3 px-0.5 py-0.5"
             style={{
               gridTemplateColumns: `repeat(${PIPELINE_COLUMNS.length}, minmax(${COLUMN_MIN_PX}px, 1fr))`,
             }}
@@ -332,7 +333,7 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
                     "glass-card flex min-h-[28rem] min-w-[220px] flex-col p-3 transition-[box-shadow,background-color] duration-200",
                     isScrollable && "max-h-[600px]",
                     isOver &&
-                      "bg-accent/10 shadow-[0_0_0_2px_rgb(44_185_164_/_0.45)]",
+                      "bg-accent/10 ring-2 ring-inset ring-[rgb(44_185_164_/_0.45)]",
                   )}
                 >
                   <header className="pointer-events-none mb-3 flex shrink-0 items-baseline justify-between gap-2 px-1">
@@ -377,24 +378,31 @@ export function KanbanBoard({ items }: { items: PipelineCard[] }) {
           </div>
         </div>
       )}
-      {drag ? (
-        <div
-          aria-hidden
-          className="pointer-events-none fixed z-50"
-          style={{
-            left: drag.x,
-            top: drag.y,
-            width: drag.width,
-          }}
-        >
-          <div className="glass-card rotate-1 p-3 shadow-[0_18px_40px_rgb(22_72_66_/_0.18)]">
-            <p className="truncate text-sm font-medium text-ink">{drag.title}</p>
-            {drag.subtitle ? (
-              <p className="mt-0.5 truncate text-xs text-muted">{drag.subtitle}</p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+      {drag
+        ? createPortal(
+            <div
+              aria-hidden
+              className="pointer-events-none fixed z-[80]"
+              style={{
+                left: drag.x,
+                top: drag.y,
+                width: drag.width,
+              }}
+            >
+              <div className="glass-card rotate-1 p-3 shadow-[0_18px_40px_rgb(22_72_66_/_0.18)]">
+                <p className="truncate text-sm font-medium text-ink">
+                  {drag.title}
+                </p>
+                {drag.subtitle ? (
+                  <p className="mt-0.5 truncate text-xs text-muted">
+                    {drag.subtitle}
+                  </p>
+                ) : null}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -420,7 +428,7 @@ function KanbanCard({
       data-card
       className={cn(
         "glass-row rounded-[16px] p-3 transition-opacity duration-150",
-        dragging && "opacity-40",
+        dragging && "invisible",
       )}
     >
       <div className="flex items-start gap-2">
