@@ -46,7 +46,14 @@ export default async function StatsPage({
       profileId: profile.id,
       ...(showArchive ? {} : { archivedAt: null }),
     },
-    select: { createdAt: true, appliedAt: true, source: true },
+    select: {
+      createdAt: true,
+      appliedAt: true,
+      source: true,
+      flowAt: true,
+      rejectedAt: true,
+      offerAt: true,
+    },
   });
   const stats = buildStatsView(period, events);
   const requestedPage = parseStatsPage(pageRaw);
@@ -64,8 +71,8 @@ export default async function StatsPage({
         title="Статистика"
         description={
           showArchive
-            ? "Усі відрізки моніторингу. Дати — за київським часом."
-            : "Поточний відрізок моніторингу. Дати — за київським часом."
+            ? "Усі відрізки: аналізи, заявки та перенесення у Флоу, Відхилили й Офер. Дати — за київським часом."
+            : "Поточний відрізок: аналізи, заявки та перенесення у Флоу, Відхилили й Офер. Дати — за київським часом."
         }
         action={
           <ArchiveToggle
@@ -133,16 +140,53 @@ export default async function StatsPage({
           </Card>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+              Флоу · {currentLabel}
+            </p>
+            <p className="mt-3 text-4xl font-semibold tracking-tight text-ink">
+              {stats.current.flow}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Усього {stats.totals.flow}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+              Відхилили · {currentLabel}
+            </p>
+            <p className="mt-3 text-4xl font-semibold tracking-tight text-ink">
+              {stats.current.rejected}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Усього {stats.totals.rejected}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+              Прийняті · {currentLabel}
+            </p>
+            <p className="mt-3 text-4xl font-semibold tracking-tight text-ink">
+              {stats.current.offers}
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Усього {stats.totals.offers}
+            </p>
+          </Card>
+        </div>
+
         <Card className="overflow-hidden p-0 sm:p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-left text-sm">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
                 <tr className="border-b border-white/30 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
                   <th className="px-4 py-3.5 font-medium sm:px-6">Дата</th>
                   <th className="px-4 py-3.5 font-medium sm:px-6">Аналізів</th>
-                  <th className="px-4 py-3.5 font-medium sm:px-6">
-                    Поданих заявок
-                  </th>
+                  <th className="px-4 py-3.5 font-medium sm:px-6">Заявок</th>
+                  <th className="px-4 py-3.5 font-medium sm:px-6">Флоу</th>
+                  <th className="px-4 py-3.5 font-medium sm:px-6">Відхилили</th>
+                  <th className="px-4 py-3.5 font-medium sm:px-6">Офер</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,6 +203,15 @@ export default async function StatsPage({
                     </td>
                     <td className="px-4 py-3 tabular-nums text-ink sm:px-6">
                       {row.applications}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-ink sm:px-6">
+                      {row.flow}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-ink sm:px-6">
+                      {row.rejected}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-ink sm:px-6">
+                      {row.offers}
                     </td>
                   </tr>
                 ))}

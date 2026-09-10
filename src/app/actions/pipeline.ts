@@ -19,6 +19,9 @@ async function ownedAnalysis(id: string) {
       appliedAt: true,
       pipelineStatus: true,
       source: true,
+      flowAt: true,
+      rejectedAt: true,
+      offerAt: true,
     },
   });
 }
@@ -148,6 +151,11 @@ export async function updatePipelineStatus(
       pipelineStatus: status,
       pipelineUpdatedAt: now,
       appliedAt: analysis.appliedAt ?? now,
+      ...(status === "flow" && !analysis.flowAt ? { flowAt: now } : {}),
+      ...(status === "rejected" && !analysis.rejectedAt
+        ? { rejectedAt: now }
+        : {}),
+      ...(status === "offer" && !analysis.offerAt ? { offerAt: now } : {}),
     },
   });
 
@@ -173,6 +181,9 @@ export async function removeFromPipeline(
         pipelineStatus: null,
         appliedAt: null,
         pipelineUpdatedAt: null,
+        flowAt: null,
+        rejectedAt: null,
+        offerAt: null,
       },
     });
   }

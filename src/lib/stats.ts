@@ -9,13 +9,22 @@ export type StatsRow = {
   label: string;
   analyses: number;
   applications: number;
+  flow: number;
+  rejected: number;
+  offers: number;
 };
 
 export type StatsView = {
   period: StatsPeriod;
   rows: StatsRow[];
   current: StatsRow;
-  totals: { analyses: number; applications: number };
+  totals: {
+    analyses: number;
+    applications: number;
+    flow: number;
+    rejected: number;
+    offers: number;
+  };
 };
 
 export const STATS_TABLE_PAGE_SIZE = 7;
@@ -129,32 +138,73 @@ function formatLabel(key: string, period: StatsPeriod): string {
   }).format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
+type BucketCounts = {
+  analyses: number;
+  applications: number;
+  flow: number;
+  rejected: number;
+  offers: number;
+};
+
+function emptyCounts(): BucketCounts {
+  return {
+    analyses: 0,
+    applications: 0,
+    flow: 0,
+    rejected: 0,
+    offers: 0,
+  };
+}
+
+function bump(
+  buckets: Map<string, BucketCounts>,
+  key: string,
+  field: keyof BucketCounts,
+) {
+  const current = buckets.get(key) ?? emptyCounts();
+  current[field] += 1;
+  buckets.set(key, current);
+}
+
 export function buildStatsView(
   period: StatsPeriod,
   events: Array<{
     createdAt: Date;
     appliedAt: Date | null;
     source?: string | null;
+    flowAt?: Date | null;
+    rejectedAt?: Date | null;
+    offerAt?: Date | null;
   }>,
   now = new Date(),
 ): StatsView {
   const todayKey = dateKeyInZone(now);
   const currentKey = bucketKey(todayKey, period);
-  const buckets = new Map<string, { analyses: number; applications: number }>();
+  const buckets = new Map<string, BucketCounts>();
 
   for (const event of events) {
     if (event.source !== "manual") {
-      const createdKey = bucketKey(dateKeyInZone(event.createdAt), period);
-      const created = buckets.get(createdKey) ?? { analyses: 0, applications: 0 };
-      created.analyses += 1;
-      buckets.set(createdKey, created);
+      bump(buckets, bucketKey(dateKeyInZone(event.createdAt), period), "analyses");
     }
-
     if (event.appliedAt) {
-      const appliedKey = bucketKey(dateKeyInZone(event.appliedAt), period);
-      const applied = buckets.get(appliedKey) ?? { analyses: 0, applications: 0 };
-      applied.applications += 1;
-      buckets.set(appliedKey, applied);
+      bump(
+        buckets,
+        bucketKey(dateKeyInZone(event.appliedAt), period),
+        "applications",
+      );
+    }
+    if (event.flowAt) {
+      bump(buckets, bucketKey(dateKeyInZone(event.flowAt), period), "flow");
+    }
+    if (event.rejectedAt) {
+      bump(
+        buckets,
+        bucketKey(dateKeyInZone(event.rejectedAt), period),
+        "rejected",
+      );
+    }
+    if (event.offerAt) {
+      bump(buckets, bucketKey(dateKeyInZone(event.offerAt), period), "offers");
     }
   }
 
@@ -162,20 +212,18 @@ export function buildStatsView(
   const rows = [...keys]
     .sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))
     .map((key) => {
-      const counts = buckets.get(key) ?? { analyses: 0, applications: 0 };
+      const counts = buckets.get(key) ?? emptyCounts();
       return {
         key,
         label: formatLabel(key, period),
-        analyses: counts.analyses,
-        applications: counts.applications,
+        ...counts,
       };
     });
 
   const current = rows.find((row) => row.key === currentKey) ?? {
     key: currentKey,
     label: formatLabel(currentKey, period),
-    analyses: 0,
-    applications: 0,
+    ...emptyCounts(),
   };
 
   return {
@@ -185,6 +233,9 @@ export function buildStatsView(
     totals: {
       analyses: events.filter((event) => event.source !== "manual").length,
       applications: events.filter((event) => event.appliedAt).length,
+      flow: events.filter((event) => event.flowAt).length,
+      rejected: events.filter((event) => event.rejectedAt).length,
+      offers: events.filter((event) => event.offerAt).length,
     },
   };
 }

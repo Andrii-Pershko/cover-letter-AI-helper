@@ -101,6 +101,9 @@ model Analysis {
   pipelineUpdatedAt DateTime?
   source            String                 @default("analysis")
   archivedAt        DateTime?
+  flowAt            DateTime?
+  rejectedAt        DateTime?
+  offerAt           DateTime?
   requirements     AnalysisRequirement[]
 
   @@index([profileId])
