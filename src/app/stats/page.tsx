@@ -1,4 +1,5 @@
 import { ArchiveToggle } from "@/components/monitoring/period-controls";
+import { ComparisonChart } from "@/components/stats/comparison-chart";
 import { StatsTablePagination } from "@/components/stats/table-pagination";
 import { Card, PageHeader } from "@/components/ui/card";
 import { hrefWithArchive, parseArchiveFlag } from "@/lib/archive";
@@ -175,6 +176,17 @@ export default async function StatsPage({
             </p>
           </Card>
         </div>
+
+        {stats.rows.length > 1 && (
+          <Card>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+              Порівняння {period === "day" ? "по днях" : period === "week" ? "по тижнях" : "по місяцях"}
+            </p>
+            <div className="mt-4">
+              <ComparisonChart rows={stats.rows} period={period} />
+            </div>
+          </Card>
+        )}
 
         <Card className="overflow-hidden p-0 sm:p-0">
           <div className="overflow-x-auto">

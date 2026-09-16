@@ -45,6 +45,7 @@ function formatAppliedAt(value: string | null) {
   return new Intl.DateTimeFormat("uk-UA", {
     day: "numeric",
     month: "short",
+    timeZone: "Europe/Kyiv",
   }).format(new Date(value));
 }
 
@@ -60,6 +61,8 @@ const SCROLLABLE_COLUMNS = new Set<PipelineStatus>([
   "flow",
   "interview",
   "test",
+  "rejected",
+  "offer",
 ]);
 
 const COLUMN_MIN_PX = 220;

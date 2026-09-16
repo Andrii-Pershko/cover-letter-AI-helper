@@ -13,9 +13,6 @@ services:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: postgresql://aicl:aicl@db:5432/aicl?schema=public
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "1000"
     volumes:
       # Весь проєкт з хоста, включно з .next у корені репозиторію.
       - .:/app

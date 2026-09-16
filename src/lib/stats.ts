@@ -76,12 +76,12 @@ export function dateKeyInZone(
   }).format(date);
 }
 
-function parseDateKey(key: string): Date {
+export function parseDateKey(key: string): Date {
   const [year, month, day] = key.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-function addDays(key: string, days: number): string {
+export function addDays(key: string, days: number): string {
   const date = parseDateKey(key);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
