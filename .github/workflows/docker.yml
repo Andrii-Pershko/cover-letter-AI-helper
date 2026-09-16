@@ -37,3 +37,48 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Pull + restart on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -e
+            cd /home/cover-letter-AI-helper
+
+            git pull --ff-only
+
+            pulled=0
+            for i in 1 2 3; do
+              if docker compose pull; then
+                pulled=1
+                break
+              fi
+              echo "docker compose pull failed (attempt $i/3), retrying..."
+              sleep 10
+            done
+            if [ "$pulled" -ne 1 ]; then
+              echo "docker compose pull failed after 3 attempts" >&2
+              exit 1
+            fi
+
+            docker compose up -d --force-recreate migrate app
+
+            for i in $(seq 1 15); do
+              curl -sf http://localhost:3401/login > /dev/null && exit 0
+              sleep 2
+            done
+            echo "App did not respond on :3401 after deploy" >&2
+            docker compose logs --tail 100 app
+            exit 1
